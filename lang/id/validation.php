@@ -46,7 +46,7 @@ return [
     'dimensions' => ':attribute memiliki dimensi gambar yang tidak valid.',
     'distinct' => ':attribute memiliki nilai duplikat.',
     'doesnt_start_with' => ':attribute tidak boleh diawali dengan salah satu dari: :values.',
-    'email' => ':attribute harus berupa alamat email yang valid.',
+    'email' => ':attribute harus berupa alamat email yang valid (contoh: nama@email.com).',
     'ends_with' => ':attribute harus diakhiri dengan salah satu dari: :values.',
     'enum' => ':attribute yang dipilih tidak valid.',
     'exists' => ':attribute yang dipilih tidak valid.',
@@ -183,6 +183,7 @@ return [
         'phone' => 'No. Telp',
         'password' => 'Password',
         'password_confirmation' => 'Konfirmasi Password',
+        'current_password' => 'Password Saat Ini',
         'status' => 'Status',
     ],
 

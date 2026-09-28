@@ -36,6 +36,26 @@ class Transaction extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function getCodeAttribute(): string
+    {
+        $code = 'TRX-'.str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
+
+        if ($this->relationLoaded('items')) {
+            $categoryAbbrevs = $this->items
+                ->pluck('menu.category.name')
+                ->filter()
+                ->map(fn ($categoryName) => strtoupper(substr($categoryName, 0, 2)))
+                ->unique()
+                ->sort();
+
+            foreach ($categoryAbbrevs as $abbrev) {
+                $code .= '-'.$abbrev;
+            }
+        }
+
+        return $code;
+    }
+
     public function items()
     {
         return $this->hasMany(TransactionItem::class);

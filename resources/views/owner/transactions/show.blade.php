@@ -78,7 +78,7 @@
                                     <td class="px-6 py-4 text-right text-[#5f4a3b]">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 text-right">
                                         @if ($item->discount > 0)
-                                            <span class="text-red-600 font-bold">- Rp {{ number_format($item->discount * $item->quantity, 0, ',', '.') }}</span>
+                                            <span class="text-red-600 font-bold">- Rp {{ number_format($item->discount, 0, ',', '.') }}</span>
                                         @else
                                             <span class="text-[#b0a090]">-</span>
                                         @endif
@@ -116,6 +116,15 @@
                             <p class="text-sm font-bold text-[#2b1f17]">{{ $transaction->user->email ?? '-' }}</p>
                         </div>
                     </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-[#8b684b] uppercase tracking-wider">No. Telp</p>
+                            <p class="text-sm font-bold text-[#2b1f17]">{{ $transaction->user->phone ?? '-' }}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -127,10 +136,6 @@
                         <span class="text-sm text-[#5f4a3b]">Subtotal</span>
                         <span class="text-sm font-bold text-[#2b1f17]">Rp {{ number_format($transaction->subtotal, 0, ',', '.') }}</span>
                     </div>
-
-                    @php
-                        $itemDiscountsTotal = $transaction->items->sum(fn($item) => $item->discount * $item->quantity);
-                    @endphp
 
                     @if ($itemDiscountsTotal > 0)
                         <div class="flex justify-between items-center">
@@ -179,7 +184,7 @@
                     @endif
                     <div class="border-t border-[#f0e8e0] pt-3 flex justify-between items-center">
                         <span class="text-sm text-[#5f4a3b]">Metode Bayar</span>
-                        <span class="text-sm font-bold text-[#2b1f17] capitalize">{{ $transaction->payment_method }}</span>
+                        <span class="text-sm font-bold text-[#2b1f17] uppercase">{{ $transaction->payment_method }}</span>
                     </div>
                 </div>
             </div>
@@ -194,3 +199,24 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@if (session('success'))
+    <style>
+        .swal-card-custom { border-radius: 1rem !important; border: 1px solid #f0e8e0 !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important; padding: 1.5rem !important; }
+        .swal-card-custom .swal2-icon { margin: 0 auto 0.5rem !important; }
+        .swal-card-custom .swal2-title { color: #2b1f17 !important; font-weight: 900 !important; font-size: 1.25rem !important; }
+        .swal-card-custom .swal2-html-container { color: #5f4a3b !important; font-size: 0.875rem !important; margin: 0.5rem 0 0 !important; }
+    </style>
+    <script>
+        Swal.fire({
+            icon: 'success', title: 'Berhasil!', text: '{{ session("success") }}',
+            confirmButtonColor: '#764706', confirmButtonText: 'OK', showConfirmButton: false, timer: 2000, timerProgressBar: true,
+            customClass: { popup: 'swal-card-custom' },
+            showClass: { popup: 'animate__animated animate__zoomIn' },
+            hideClass: { popup: 'animate__animated animate__zoomOut' }
+        });
+    </script>
+@endif
+
+@endpush

@@ -10,28 +10,36 @@ use Illuminate\Http\Request;
 
 class PromoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $status = $request->query('status');
         $now = now();
 
-        $activePromos = Promo::where('is_active', true)
+        $activeQuery = Promo::withCount('transactions')->with(['menu', 'category'])
+            ->where('is_active', true)
             ->where(function ($q) use ($now) {
                 $q->whereNull('end_date')->orWhere('end_date', '>=', $now);
-            })
-            ->latest()->get();
+            });
 
-        $expiredPromos = Promo::where('is_active', true)
-            ->where('end_date', '<', $now)
-            ->latest()->get();
+        $expiredQuery = Promo::withCount('transactions')->with(['menu', 'category'])
+            ->where('end_date', '<', $now);
 
-        $inactivePromos = Promo::where('is_active', false)->latest()->get();
+        $inactiveQuery = Promo::withCount('transactions')->with(['menu', 'category'])
+            ->where('is_active', false)
+            ->where(function ($q) use ($now) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', $now);
+            });
+
+        $activePromos = (is_null($status) || $status === 'active') ? $activeQuery->latest()->get() : collect();
+        $expiredPromos = (is_null($status) || $status === 'expired') ? $expiredQuery->latest()->get() : collect();
+        $inactivePromos = (is_null($status) || $status === 'inactive') ? $inactiveQuery->latest()->get() : collect();
 
         $total = Promo::count();
-        $active = $activePromos->count();
-        $expired = $expiredPromos->count();
-        $inactive = $inactivePromos->count();
+        $active = $activeQuery->count();
+        $expired = $expiredQuery->count();
+        $inactive = $inactiveQuery->count();
 
-        return view('owner.promos.index', compact('activePromos', 'expiredPromos', 'inactivePromos', 'total', 'active', 'expired', 'inactive'));
+        return view('owner.promos.index', compact('activePromos', 'expiredPromos', 'inactivePromos', 'total', 'active', 'expired', 'inactive', 'status'));
     }
 
     public function create()
@@ -77,7 +85,7 @@ class PromoController extends Controller
         }
 
         $validated['is_active'] = true;
-        $validated['target_id'] = $validated['scope'] === 'transaction' ? null : $validated['target_id'];
+        $validated['target_id'] = $validated['scope'] === 'transaction' ? null : ($validated['target_id'] ?? null);
 
         Promo::create($validated);
 
@@ -127,7 +135,8 @@ class PromoController extends Controller
             }
         }
 
-        $validated['target_id'] = $validated['scope'] === 'transaction' ? null : $validated['target_id'];
+        $validated['target_id'] = $validated['scope'] === 'transaction' ? null : ($validated['target_id'] ?? null);
+        $validated['is_active'] = $request->boolean('is_active');
 
         $promo->update($validated);
 
@@ -137,16 +146,24 @@ class PromoController extends Controller
 
     public function destroy(Promo $promo)
     {
+        if ($promo->transactions()->exists()) {
+            return back()->with('error', "Promo '{$promo->name}' tidak bisa dihapus karena sudah memiliki data transaksi.");
+        }
+
         $promo->delete();
 
         return redirect()->route('owner.promos.index')
             ->with('success', 'Promo berhasil dihapus.');
     }
 
-    public function toggleStatus(Promo $promo)
+    public function toggleStatus(Request $request, Promo $promo)
     {
         $promo->is_active = ! $promo->is_active;
         $promo->save();
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => $promo->is_active]);
+        }
 
         $status = $promo->is_active ? 'diaktifkan' : 'dinonaktifkan';
 

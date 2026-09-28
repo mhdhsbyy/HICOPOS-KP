@@ -43,6 +43,12 @@
                 <h3 class="text-base font-black text-[#2b1f17]">Informasi Menu</h3>
 
                 <div class="space-y-3">
+                    @if ($menu->code)
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-[#8b684b] uppercase tracking-wider">Kode Menu</span>
+                            <span class="text-sm font-bold text-[#2b1f17]">{{ $menu->code }}</span>
+                        </div>
+                    @endif
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-[#8b684b] uppercase tracking-wider">Kategori</span>
                         <span class="text-sm font-bold text-[#2b1f17]">{{ $menu->category->name }}</span>

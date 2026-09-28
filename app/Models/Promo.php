@@ -26,19 +26,29 @@ class Promo extends Model
     protected $casts = [
         'value' => 'decimal:2',
         'min_amount' => 'decimal:2',
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
         'is_active' => 'boolean',
     ];
+
+    public function menu()
+    {
+        return $this->belongsTo(Menu::class, 'target_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'target_id');
+    }
 
     public function target()
     {
         if ($this->scope === 'item') {
-            return $this->belongsTo(Menu::class, 'target_id');
+            return $this->menu();
         }
 
         if ($this->scope === 'category') {
-            return $this->belongsTo(Category::class, 'target_id');
+            return $this->category();
         }
 
         return null;

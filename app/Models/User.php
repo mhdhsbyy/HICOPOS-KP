@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -25,6 +26,7 @@ class User extends Authenticatable
         'last_name',
         'email',
         'phone',
+        'photo',
         'password',
         'status',
     ];
@@ -55,5 +57,17 @@ class User extends Authenticatable
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function getFullNameAttribute()
+    {
+        return trim($this->first_name.' '.$this->last_name) ?: $this->username;
+    }
+
+    public function getAvatarUrlAttribute(): string
+    {
+        return $this->photo
+            ? Storage::url($this->photo)
+            : asset('images/logo-ho.png');
     }
 }

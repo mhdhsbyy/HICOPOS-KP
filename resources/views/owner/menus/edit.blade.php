@@ -97,7 +97,26 @@
                         <input type="file" name="photo" id="photo" accept="image/*"
                             class="text-sm text-[#5f4a3b] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#FFF0DA] file:text-[#764706] hover:file:bg-[#f0e0c0] file:cursor-pointer file:transition">
                     </div>
+                    <p id="photo-error" class="hidden text-xs text-red-600 mt-1.5"></p>
                     <x-input-error :messages="$errors->get('photo')" />
+                </div>
+
+                {{-- Status --}}
+                <div>
+                    <label class="block text-sm font-bold text-[#2b1f17] mb-1.5">Status</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="status" value="active" {{ old('status', $menu->status) === 'active' ? 'checked' : '' }}
+                                class="w-4 h-4 text-[#764706] focus:ring-[#764706] border-[#e2d3c2]">
+                            <span class="text-sm font-bold text-[#2b1f17]">Aktif</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="status" value="inactive" {{ old('status', $menu->status) === 'inactive' ? 'checked' : '' }}
+                                class="w-4 h-4 text-[#764706] focus:ring-[#764706] border-[#e2d3c2]">
+                            <span class="text-sm font-bold text-[#2b1f17]">Nonaktif</span>
+                        </label>
+                    </div>
+                    <x-input-error :messages="$errors->get('status')" />
                 </div>
 
             </div>
@@ -118,16 +137,30 @@
 </div>
 
 <script>
-    document.getElementById('photo').addEventListener('change', function(e) {
+    const photoInput = document.getElementById('photo');
+    const photoError = document.getElementById('photo-error');
+    const maxSize = 2 * 1024 * 1024;
+
+    photoInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                document.getElementById('photo-preview').innerHTML =
-                    '<img src="' + ev.target.result + '" class="w-full h-full object-cover">';
-            };
-            reader.readAsDataURL(file);
+        photoError.classList.add('hidden');
+        photoError.textContent = '';
+
+        if (!file) return;
+
+        if (file.size > maxSize) {
+            photoError.textContent = 'Ukuran foto maksimal 2MB. File Anda ' + (file.size / 1024 / 1024).toFixed(1) + 'MB.';
+            photoError.classList.remove('hidden');
+            photoInput.value = '';
+            return;
         }
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            document.getElementById('photo-preview').innerHTML =
+                '<img src="' + ev.target.result + '" class="w-full h-full object-cover">';
+        };
+        reader.readAsDataURL(file);
     });
 </script>
 @endsection

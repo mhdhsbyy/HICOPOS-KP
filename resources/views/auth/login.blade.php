@@ -87,8 +87,6 @@
                                     required autofocus autocomplete="username" placeholder="Masukkan username"
                                     class="w-full border-0 bg-transparent p-0 text-[#35271f] placeholder:text-[#a49689] focus:ring-0 text-[15px]">
                             </div>
-
-                            <x-input-error :messages="$errors->get('username')" class="mt-1.5" />
                         </div>
 
                         {{-- Password --}}
@@ -110,7 +108,7 @@
                                     class="w-full border-0 bg-transparent p-0 text-[#35271f] placeholder:text-[#a49689] focus:ring-0 text-[15px]">
                             </div>
 
-                            <x-input-error :messages="$errors->get('password')" class="mt-1.5" />
+                            <x-input-error :messages="$errors->all()" class="mt-3" />
                         </div>
 
                         {{-- Remember / Forgot --}}

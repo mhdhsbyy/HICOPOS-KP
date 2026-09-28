@@ -3,16 +3,39 @@
 @section('title', 'Kelola Kategori')
 
 @section('content')
+
+    <style>
+        .swal-card-custom {
+            border-radius: 1rem !important;
+            border: 1px solid #f0e8e0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            padding: 1.5rem !important;
+        }
+        .swal-card-custom .swal2-icon {
+            margin: 0 auto 0.5rem !important;
+        }
+        .swal-card-custom .swal2-title {
+            color: #2b1f17 !important;
+            font-weight: 900 !important;
+            font-size: 1.25rem !important;
+        }
+        .swal-card-custom .swal2-html-container {
+            color: #5f4a3b !important;
+            font-size: 0.875rem !important;
+            margin: 0.5rem 0 0 !important;
+        }
+    </style>
+
 <div class="space-y-8">
 
     {{-- Dashboard Card --}}
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-[#f0e8e0] flex items-center justify-between">
         <div>
-            <h2 class="text-xl font-black text-[#2b1f17] mt-1">Kelola Kategori</h2>
+            <h2 class="text-xl font-black text-[#2b1f17]">Kelola Kategori</h2>
             <p class="text-sm text-[#5f4a3b] mt-1">Kelola kategori menu di Hideout Coffee.</p>
         </div>
         <a href="{{ route('owner.categories.create') }}"
-            class="inline-flex items-center gap-2 bg-[#764706] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#5a3606] transition shadow-md">
+            class="inline-flex items-center gap-2 bg-[#764706] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#5a3606] transition shadow-md shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
@@ -20,31 +43,33 @@
         </a>
     </div>
 
+    {{-- Error Message --}}
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: '{{ session("error") }}',
+                confirmButtonColor: '#764706',
+                confirmButtonText: 'OK',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                customClass: {
+                    popup: 'swal-card-custom'
+                },
+                showClass: {
+                    popup: 'animate__animated animate__zoomIn'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__zoomOut'
+                }
+            });
+        </script>
+    @endif
+
     {{-- Success Message --}}
     @if (session('success'))
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <style>
-            .swal-card-custom {
-                border-radius: 1rem !important;
-                border: 1px solid #f0e8e0 !important;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-                padding: 1.5rem !important;
-            }
-            .swal-card-custom .swal2-icon {
-                margin: 0 auto 0.5rem !important;
-            }
-            .swal-card-custom .swal2-title {
-                color: #2b1f17 !important;
-                font-weight: 900 !important;
-                font-size: 1.25rem !important;
-            }
-            .swal-card-custom .swal2-html-container {
-                color: #5f4a3b !important;
-                font-size: 0.875rem !important;
-                margin: 0.5rem 0 0 !important;
-            }
-        </style>
         <script>
             Swal.fire({
                 icon: 'success',
@@ -69,7 +94,7 @@
     @endif
 
     {{-- Stats --}}
-    <div class="grid grid-cols-1 sm:grid-cols-1 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-[#f0e8e0] flex items-center gap-5">
             <div class="w-14 h-14 rounded-2xl bg-[#FFF0DA] flex items-center justify-center shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#764706]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -79,7 +104,29 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-[#8b684b] uppercase tracking-wider">Total Kategori</p>
-                <h3 class="text-2xl font-black text-[#2b1f17] mt-0.5">{{ $total }}</h3>
+                <h3 class="text-2xl font-black text-[#2b1f17] mt-0.5"><span x-data="hoCountUp({{ $total }}, { delay: 150 })" x-text="shown">0</span></h3>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-[#f0e8e0] flex items-center gap-5">
+            <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-[#8b684b] uppercase tracking-wider">Kategori Berisi Menu</p>
+                <h3 class="text-2xl font-black text-[#2b1f17] mt-0.5"><span x-data="hoCountUp({{ $withMenu }}, { delay: 300 })" x-text="shown">0</span></h3>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-[#f0e8e0] flex items-center gap-5">
+            <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-[#8b684b] uppercase tracking-wider">Kategori Kosong</p>
+                <h3 class="text-2xl font-black text-[#2b1f17] mt-0.5"><span x-data="hoCountUp({{ $empty }}, { delay: 450 })" x-text="shown">0</span></h3>
             </div>
         </div>
     </div>
@@ -93,7 +140,11 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
                 <input type="text" id="searchKategori" placeholder="Cari kategori..."
-                    class="pl-10 pr-4 py-2 text-sm rounded-xl border border-[#e2d3c2] bg-[#faf6f2] text-[#2b1f17] placeholder-[#b8a898] focus:outline-none focus:ring-2 focus:ring-[#764706]/30 focus:border-[#764706] transition w-64">
+                    class="pl-10 pr-10 py-2 text-sm rounded-xl border border-[#e2d3c2] bg-[#faf6f2] text-[#2b1f17] placeholder-[#b8a898] focus:outline-none focus:ring-2 focus:ring-[#764706]/30 focus:border-[#764706] transition w-64">
+                <button type="button" id="clearSearchKategori" style="display:none"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-[#b8a898] hover:bg-[#f0e8e0] hover:text-[#5f4a3b] flex items-center justify-center transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                </button>
             </div>
         </div>
         <div class="overflow-x-auto">
@@ -126,7 +177,11 @@
                                         Edit
                                     </a>
                                     <form action="{{ route('owner.categories.destroy', $category) }}" method="POST"
-                                        onsubmit="return confirm('Yakin ingin menghapus kategori ini?')">
+                                        @if (($category->menus_count ?? $category->menus->count()) > 0)
+                                            onsubmit="event.preventDefault(); blockedDelete('Kategori ini masih memiliki menu dan tidak dapat dihapus.');"
+                                        @else
+                                            onsubmit="event.preventDefault(); confirmDelete(this, 'Yakin ingin menghapus kategori ini?')"
+                                        @endif>
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
@@ -161,7 +216,7 @@
 
         @if ($categories->hasPages())
             <div class="px-6 py-4 border-t border-[#f0e8e0]">
-                {{ $categories->links() }}
+                {{ $categories->links('pagination::tailwind', ['resultsLabel' => 'Kategori']) }}
             </div>
         @endif
     </div>
@@ -169,25 +224,79 @@
 
 <script>
     const searchInput = document.getElementById('searchKategori');
+    const clearSearchKategori = document.getElementById('clearSearchKategori');
     const tbody = document.querySelector('table tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
-    const emptyRow = rows.find(r => r.querySelector('td[colspan]'));
+    const serverEmptyRow = rows.find(r => r.querySelector('td[colspan]'));
+    const defaultEmptyMessage = serverEmptyRow
+        ? serverEmptyRow.querySelector('td p').textContent
+        : '';
 
-    searchInput.addEventListener('input', function () {
-        const query = this.value.toLowerCase().trim();
+    let dynamicEmptyRow = null;
+
+    function createEmptyRow() {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td colspan="4" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-[#d4c8b8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
+                    </svg>
+                    <p class="mt-3 text-sm font-bold text-[#8b684b]"></p>
+                </div>
+            </td>`;
+        return tr;
+    }
+
+    function showEmptyState(message) {
+        if (serverEmptyRow) {
+            serverEmptyRow.style.display = '';
+            serverEmptyRow.querySelector('td p').textContent = message;
+            return;
+        }
+        if (!dynamicEmptyRow) {
+            dynamicEmptyRow = createEmptyRow();
+            tbody.appendChild(dynamicEmptyRow);
+        }
+        dynamicEmptyRow.style.display = '';
+        dynamicEmptyRow.querySelector('td p').textContent = message;
+    }
+
+    function hideEmptyState() {
+        if (serverEmptyRow) serverEmptyRow.style.display = 'none';
+        if (dynamicEmptyRow) dynamicEmptyRow.style.display = 'none';
+    }
+
+    function filterKategori() {
+        const query = searchInput.value.toLowerCase().trim();
         let visible = 0;
 
+        clearSearchKategori.style.display = searchInput.value ? 'flex' : 'none';
+
         rows.forEach(row => {
-            if (row === emptyRow) return;
+            if (row === serverEmptyRow) return;
             const text = row.textContent.toLowerCase();
             const match = text.includes(query);
             row.style.display = match ? '' : 'none';
             if (match) visible++;
         });
 
-        if (emptyRow) {
-            emptyRow.style.display = visible === 0 ? '' : 'none';
+        if (visible === 0) {
+            showEmptyState(query !== ''
+                ? `Tidak ada hasil pencarian untuk "${searchInput.value.trim()}"`
+                : defaultEmptyMessage);
+        } else {
+            hideEmptyState();
         }
+    }
+
+    searchInput.addEventListener('input', filterKategori);
+
+    clearSearchKategori.addEventListener('click', function () {
+        searchInput.value = '';
+        filterKategori();
+        searchInput.focus();
     });
 </script>
 @endsection

@@ -104,7 +104,7 @@
                     </div>
                     <div x-show="scope === 'item'" x-data="menuSearch()" x-init="init()">
                         <label class="block text-sm font-bold text-[#2b1f17] mb-1.5">Pilih Menu</label>
-                        <input type="hidden" name="target_id" :value="selectedId">
+                        <input type="hidden" name="target_id" :value="selectedId" :disabled="scope !== 'item'">
                         <div class="relative">
                             <div class="flex items-center w-full px-4 py-2.5 rounded-xl border border-[#e2d3c2] focus-within:ring-2 focus-within:ring-[#764706] focus-within:border-transparent transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#b8a898] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -142,6 +142,7 @@
                     <div x-show="scope === 'category'">
                         <label for="target_id_category" class="block text-sm font-bold text-[#2b1f17] mb-1.5">Pilih Kategori</label>
                         <select name="target_id" id="target_id_category"
+                            :disabled="scope !== 'category'"
                             class="w-full px-4 py-2.5 rounded-xl border border-[#e2d3c2] text-sm text-[#2b1f17] focus:outline-none focus:ring-2 focus:ring-[#764706] focus:border-transparent transition">
                             <option value="">Pilih kategori...</option>
                             @foreach ($categories as $category)
@@ -176,19 +177,11 @@
 
                 {{-- Periode --}}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="start_date" class="block text-sm font-bold text-[#2b1f17] mb-1.5">Tanggal Mulai <span class="text-[#b8a898] font-normal">(opsional)</span></label>
-                        <input type="date" name="start_date" id="start_date" value="{{ old('start_date') }}"
-                            class="w-full px-4 py-2.5 rounded-xl border border-[#e2d3c2] text-sm text-[#2b1f17] focus:outline-none focus:ring-2 focus:ring-[#764706] focus:border-transparent transition">
-                        <x-input-error :messages="$errors->get('start_date')" />
-                    </div>
-                    <div>
-                        <label for="end_date" class="block text-sm font-bold text-[#2b1f17] mb-1.5">Tanggal Berakhir <span class="text-[#b8a898] font-normal">(opsional)</span></label>
-                        <input type="date" name="end_date" id="end_date" value="{{ old('end_date') }}"
-                            class="w-full px-4 py-2.5 rounded-xl border border-[#e2d3c2] text-sm text-[#2b1f17] focus:outline-none focus:ring-2 focus:ring-[#764706] focus:border-transparent transition">
-                        <x-input-error :messages="$errors->get('end_date')" />
-                    </div>
+                    @include('owner.promos._datetime_field', ['label' => 'Tanggal Mulai', 'name' => 'start_date', 'id' => 'start_date', 'value' => old('start_date'), 'errorKey' => 'start_date'])
+
+                    @include('owner.promos._datetime_field', ['label' => 'Tanggal Berakhir', 'name' => 'end_date', 'id' => 'end_date', 'value' => old('end_date'), 'errorKey' => 'end_date'])
                 </div>
+                <p class="mt-2 text-xs font-medium text-[#8b684b]">Kosongkan kedua tanggal di atas jika promo ingin selalu aktif.</p>
 
             </div>
 
@@ -232,7 +225,10 @@ function menuSearch() {
         init() {
             if (this.selectedId) {
                 let m = allMenus.find(x => x.id == this.selectedId);
-                if (m) this.selectedName = m.name + ' (' + m.category + ')';
+                if (m) {
+                    this.selectedName = m.name + ' (' + m.category + ')';
+                    this.query = m.name;
+                }
             }
             this.filter();
         },
@@ -245,7 +241,7 @@ function menuSearch() {
         select(menu) {
             this.selectedId = menu.id;
             this.selectedName = menu.name + ' (' + menu.category + ')';
-            this.query = '';
+            this.query = menu.name;
             this.open = false;
         },
 

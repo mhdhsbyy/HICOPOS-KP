@@ -1,7 +1,7 @@
 @if ($paginator->hasPages())
     <nav class="flex items-center justify-between">
         <p class="text-sm text-[#8b684b]">
-            Menampilkan {{ $paginator->firstItem() }}-{{ $paginator->lastItem() }} dari {{ $paginator->total() }} kasir
+            Menampilkan {{ $paginator->firstItem() }}-{{ $paginator->lastItem() }} dari {{ $paginator->total() }} {{ $resultsLabel ?? 'kasir' }}
         </p>
 
         <div class="flex items-center gap-1">

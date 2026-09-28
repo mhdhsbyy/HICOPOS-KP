@@ -13,6 +13,7 @@ class CategorySeeder extends Seeder
             'Kopi',
             'Non-Kopi',
             'Snack',
+            'Makanan',
         ];
 
         foreach ($categories as $name) {

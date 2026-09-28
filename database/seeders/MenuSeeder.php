@@ -13,6 +13,7 @@ class MenuSeeder extends Seeder
         'Kopi' => [118, 71, 6],
         'Non-Kopi' => [34, 139, 34],
         'Snack' => [210, 105, 30],
+        'Makanan' => [178, 34, 34],
     ];
 
     private array $photoMap = [
@@ -38,11 +39,13 @@ class MenuSeeder extends Seeder
 
         // Snack
         'Takoyaki' => 'takoyaki.png',
+        'Kensos' => 'kensos.png',
+
+        // Makanan
         'Nasi Goreng' => 'nasigoreng.png',
         'Indomie Goreng' => 'indomiegoreng.png',
         'Indomie Kuah' => 'indomiekuah.png',
         'Indomie Double' => 'indomiedouble.png',
-        'Kensos' => 'kensos.png',
     ];
 
     public function run(): void
@@ -184,6 +187,19 @@ class MenuSeeder extends Seeder
                     'status' => 'active',
                 ],
                 [
+                    'name' => 'Kensos',
+                    'description' => 'Kentang goreng dengan saus sambal',
+                    'recipe' => "Bahan:\n- 200g kentang goreng beku (siap pakai)\n- Minyak goreng secukupnya\n- Garam secukupnya\n- Saus sambal dan mayones (pelengkap)\n\nCara membuat:\n1. Panaskan minyak goreng dalam wajan.\n2. Goreng kentang beku dengan api sedang hingga keemasan.\n3. Angkat dan tiriskan di atas tisu untuk menyerap minyak berlebih.\n4. Taburi garam secukupnya.\n5. Sajikan hangat dengan saus sambal dan mayones.",
+                    'price' => 15000,
+                    'status' => 'active',
+                ],
+            ],
+
+            // ========================================
+            // MAKANAN
+            // ========================================
+            'Makanan' => [
+                [
                     'name' => 'Nasi Goreng',
                     'description' => 'Nasi goreng spesial ala Hideout',
                     'recipe' => "Bahan:\n- 250g nasi putih dingin\n- 2 siung bawang putih, cincang\n- 1 butir telur\n- 100g ayam suwir\n- 2 sdm kecap manis\n- 1 sdm saus tiram\n- Garam dan merica secukupnya\n- Timun, kerupuk, dan bawang goreng (pelengkap)\n\nCara membuat:\n1. Panaskan minyak, tumis bawang putih hingga harum.\n2. Masak telur orak-arik.\n3. Tambahkan ayam suwir, aduk rata.\n4. Masukkan nasi putih, aduk dengan api besar.\n5. Tambahkan kecap manis, saus tiram, garam, dan merica.\n6. Aduk hingga bumbu meresap dan nasi agak kering.\n7. Sajikan dengan pelengkap timun, kerupuk, dan bawang goreng.",
@@ -211,13 +227,6 @@ class MenuSeeder extends Seeder
                     'price' => 12000,
                     'status' => 'active',
                 ],
-                [
-                    'name' => 'Kensos',
-                    'description' => 'Kentang goreng dengan saus sambal',
-                    'recipe' => "Bahan:\n- 200g kentang goreng beku (siap pakai)\n- Minyak goreng secukupnya\n- Garam secukupnya\n- Saus sambal dan mayones (pelengkap)\n\nCara membuat:\n1. Panaskan minyak goreng dalam wajan.\n2. Goreng kentang beku dengan api sedang hingga keemasan.\n3. Angkat dan tiriskan di atas tisu untuk menyerap minyak berlebih.\n4. Taburi garam secukupnya.\n5. Sajikan hangat dengan saus sambal dan mayones.",
-                    'price' => 15000,
-                    'status' => 'active',
-                ],
             ],
         ];
 
@@ -230,6 +239,7 @@ class MenuSeeder extends Seeder
                 $path = $this->getPhoto($data['name'], $categoryName);
 
                 Menu::create([
+                    'code' => Menu::generateCode($category),
                     'name' => $data['name'],
                     'description' => $data['description'],
                     'recipe' => $data['recipe'],

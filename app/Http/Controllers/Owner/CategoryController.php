@@ -13,8 +13,10 @@ class CategoryController extends Controller
         $categories = Category::withCount('menus')->latest()->paginate(5);
 
         $total = Category::count();
+        $withMenu = Category::has('menus')->count();
+        $empty = Category::whereDoesntHave('menus')->count();
 
-        return view('owner.categories.index', compact('categories', 'total'));
+        return view('owner.categories.index', compact('categories', 'total', 'withMenu', 'empty'));
     }
 
     public function create()
@@ -57,6 +59,10 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        if ($category->menus()->exists()) {
+            return back()->with('error', "Kategori '{$category->name}' tidak bisa dihapus karena masih memiliki menu.");
+        }
+
         $category->delete();
 
         return redirect()->route('owner.categories.index')

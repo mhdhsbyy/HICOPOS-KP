@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
+use App\Models\Menu;
 use App\Models\Promo;
 use Illuminate\Database\Seeder;
 
@@ -9,13 +11,18 @@ class PromoSeeder extends Seeder
 {
     public function run(): void
     {
+        $kopiCategoryId = Category::where('name', 'Kopi')->value('id');
+        $nonKopiCategoryId = Category::where('name', 'Non-Kopi')->value('id');
+        $matchaId = Menu::where('name', 'Matcha')->value('id');
+        $takoyakiId = Menu::where('name', 'Takoyaki')->value('id');
+
         Promo::create([
             'name' => 'Promo Spesial Kopi',
             'description' => 'Potongan Rp 5.000 untuk setiap pembelian menu kopi',
             'type' => 'flat',
             'value' => 5000,
             'scope' => 'category',
-            'target_id' => 1,
+            'target_id' => $kopiCategoryId,
             'is_active' => true,
         ]);
 
@@ -38,6 +45,39 @@ class PromoSeeder extends Seeder
             'min_amount' => 200000,
             'start_date' => now()->subDays(5),
             'end_date' => now()->addDays(25),
+            'is_active' => true,
+        ]);
+
+        Promo::create([
+            'name' => 'Promo Hemat Non-Kopi',
+            'description' => 'Diskon 15% untuk semua menu kategori Non-Kopi',
+            'type' => 'percentage',
+            'value' => 15,
+            'scope' => 'category',
+            'target_id' => $nonKopiCategoryId,
+            'is_active' => true,
+        ]);
+
+        Promo::create([
+            'name' => 'Diskon Spesial Matcha',
+            'description' => 'Diskon 20% untuk menu Matcha, minimal pembelian 2 item',
+            'type' => 'percentage',
+            'value' => 20,
+            'scope' => 'item',
+            'target_id' => $matchaId,
+            'min_quantity' => 2,
+            'start_date' => now()->subDays(3),
+            'end_date' => now()->addDays(14),
+            'is_active' => true,
+        ]);
+
+        Promo::create([
+            'name' => 'Takoyaki Berlimpah',
+            'description' => 'Potongan Rp 3.000 untuk setiap pembelian Takoyaki',
+            'type' => 'flat',
+            'value' => 3000,
+            'scope' => 'item',
+            'target_id' => $takoyakiId,
             'is_active' => true,
         ]);
     }
