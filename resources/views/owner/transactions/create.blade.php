@@ -241,12 +241,19 @@
                         <span class="text-[#2b1f17]">Total</span>
                         <span class="text-[#764706]" x-text="'Rp ' + formatNumber(total)"></span>
                     </div>
+
+                    {{-- Nama Pelanggan --}}
+                    <div class="space-y-2 pt-1">
+                        <label class="text-xs font-bold text-[#5f4a3b]">Nama Pelanggan <span class="text-[#b0a090] font-normal">(opsional)</span></label>
+                        <input type="text" x-model="customerName" @input.debounce.500ms="savePosState()" maxlength="255" placeholder="Contoh: Budi"
+                            class="w-full px-3 py-2 rounded-xl border border-[#f0e8e0] text-sm text-[#2b1f17] placeholder-[#b0a090] focus:outline-none focus:ring-2 focus:ring-[#764706]/30 focus:border-[#764706] transition">
+                    </div>
                 </div>
 
                 {{-- Metode Pembayaran --}}
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-[#5f4a3b]">Metode Pembayaran</label>
-                    <div class="grid grid-cols-4 gap-2">
+                    <div class="grid grid-cols-5 gap-2">
                         <button type="button" @click="paymentMethod = 'cash'"
                             class="py-2 rounded-lg text-xs font-bold transition cursor-pointer border"
                             :class="paymentMethod === 'cash' ? 'bg-[#764706] text-white border-[#764706]' : 'bg-white text-[#5f4a3b] border-[#f0e8e0] hover:border-[#764706]'">
@@ -264,6 +271,12 @@
                             :class="paymentMethod === 'kredit' ? 'bg-[#764706] text-white border-[#764706]' : 'bg-white text-[#5f4a3b] border-[#f0e8e0] hover:border-[#764706]'">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>
                             KREDIT
+                        </button>
+                        <button type="button" @click="paymentMethod = 'transfer'"
+                            class="py-2 rounded-lg text-xs font-bold transition cursor-pointer border"
+                            :class="paymentMethod === 'transfer' ? 'bg-[#764706] text-white border-[#764706]' : 'bg-white text-[#5f4a3b] border-[#f0e8e0] hover:border-[#764706]'">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                            BANK
                         </button>
                         <button type="button" @click="paymentMethod = 'qris'"
                             class="py-2 rounded-lg text-xs font-bold transition cursor-pointer border"
@@ -311,13 +324,22 @@
                     <p class="text-xs text-[#8b684b]">Pelanggan membayar melalui EDC, lalu tekan "Proses Pembayaran" untuk konfirmasi berhasil / gagal.</p>
                 </div>
 
+                {{-- Bayar (Transfer) --}}
+                <div class="space-y-2" x-show="paymentMethod === 'transfer'">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-[#5f4a3b]">Total Pembayaran</span>
+                        <span class="font-bold text-[#764706]" x-text="'Rp ' + formatNumber(total)"></span>
+                    </div>
+                    <p class="text-xs text-[#8b684b]">Pilih bank tujuan, lalu tekan "Proses Pembayaran" untuk menampilkan detail rekening.</p>
+                </div>
+
                 {{-- Bayar (QRIS) --}}
                 <div class="space-y-2" x-show="paymentMethod === 'qris'">
                     <div class="flex justify-between items-center text-sm">
                         <span class="text-[#5f4a3b]">Total Pembayaran</span>
                         <span class="font-bold text-[#764706]" x-text="'Rp ' + formatNumber(total)"></span>
                     </div>
-                    <p class="text-xs text-[#8b684b]">Tekan "Proses Pembayaran" untuk menampilkan QRIS kepada pelanggan.</p>
+                    <p class="text-xs text-[#8b684b]">Pelanggan membayar melalui QRIS, lalu tekan "Proses Pembayaran" untuk menampilkan kode QR dan konfirmasi pembayaran.</p>
                 </div>
 
                 {{-- Submit --}}
@@ -327,6 +349,7 @@
                     <input type="hidden" name="amount_paid" :value="paymentMethod === 'cash' ? amountPaid : total">
                     <input type="hidden" name="discount" :value="discount">
                     <input type="hidden" name="payment_method" :value="paymentMethod">
+                    <input type="hidden" name="customer_name" :value="customerName.trim()">
                     <input type="hidden" name="applied_promos" :value="JSON.stringify(appliedPromos.map(p => ({promo_id: p.id, discount_amount: p.discount_amount})))">
                     <input type="hidden" name="print_receipt" :value="printReceipt ? '1' : '0'">
 
@@ -337,6 +360,72 @@
                         Proses Pembayaran
                     </button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Transfer Bank Modal --}}
+    <div x-show="showBankModal" x-cloak
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showBankModal = false">
+        <div x-show="showBankModal"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            class="relative bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 text-center space-y-5">
+
+            <button type="button" @click="showBankModal = false"
+                class="absolute top-3 right-3 w-7 h-7 rounded-lg text-[#8b684b] hover:bg-[#f0e8e0] hover:text-[#5f4a3b] flex items-center justify-center transition cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="w-14 h-14 mx-auto bg-[#FFF0DA] rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#764706]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-black text-[#2b1f17]">Transfer Bank</h3>
+                <p class="text-sm text-[#8b684b] mt-1">Minta pelanggan transfer ke rekening di bawah ini.</p>
+            </div>
+
+            <div class="space-y-2">
+                <template x-for="(account, index) in bankAccounts" :key="index">
+                    <button type="button" @click="selectedBankIndex = index"
+                        class="w-full px-4 py-3 rounded-xl border-2 text-left transition cursor-pointer"
+                        :class="selectedBankIndex === index ? 'border-[#764706] bg-[#FFF0DA]' : 'border-[#f0e8e0] bg-white hover:border-[#b8a898]'">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-sm font-black text-[#2b1f17]" x-text="account.bank"></span>
+                            <span class="text-[10px] font-black tracking-wide text-[#764706]" x-show="selectedBankIndex === index">DIPILIH</span>
+                        </div>
+                        <p class="text-lg font-black tracking-widest text-[#764706] mt-1" x-text="account.account_number"></p>
+                        <p class="text-xs text-[#8b684b]" x-text="account.account_name"></p>
+                    </button>
+                </template>
+            </div>
+
+            <div class="bg-[#faf7f4] rounded-xl p-4">
+                <p class="text-sm text-[#5f4a3b]">Total yang harus dibayar</p>
+                <p class="text-2xl font-black text-[#764706]" x-text="'Rp ' + formatNumber(total)"></p>
+            </div>
+
+            <div class="space-y-2">
+                <button type="button" @click="bankTransferPaid()"
+                    class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-600 to-[#764706] text-white hover:from-green-700 hover:to-[#5a3606] transition shadow-md cursor-pointer flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    Sudah Dibayar
+                </button>
+                <button type="button" @click="showBankModal = false"
+                    class="w-full py-2.5 rounded-xl text-sm font-bold text-[#764706] bg-[#764706]/10 border-2 border-[#764706]/30 hover:bg-[#764706]/20 transition shadow-sm cursor-pointer">
+                    Batal
+                </button>
             </div>
         </div>
     </div>
@@ -515,6 +604,10 @@
             <h3 class="text-lg font-black text-[#2b1f17]">Konfirmasi Pembayaran</h3>
 
             <div class="bg-[#faf7f4] rounded-xl p-4 space-y-2 text-sm">
+                <div class="flex justify-between" x-show="customerName.trim() !== ''">
+                    <span class="text-[#5f4a3b] font-bold">Pelanggan</span>
+                    <span class="font-bold text-[#2b1f17]" x-text="customerName.trim()"></span>
+                </div>
                 <div class="flex justify-between">
                     <span class="text-[#5f4a3b] font-bold">Subtotal</span>
                     <span class="font-bold text-[#2b1f17]" x-text="'Rp ' + formatNumber(subtotal)"></span>
@@ -613,7 +706,7 @@
                         @endif
                         <div class="flex items-center gap-2 flex-wrap mt-2">
                             @if ($promo->scope === 'item')
-                                <span class="text-[10px] font-bold text-[#764706] bg-[#FFF0DA] px-2 py-0.5 rounded-full">Item{{ $promo->target ? ' · '.$promo->target->name : '' }}</span>
+                                <span class="text-[10px] font-bold text-[#764706] bg-[#FFF0DA] px-2 py-0.5 rounded-full">Item{{ $promo->menus->isNotEmpty() ? ' · '.$promo->menus->pluck('name')->join(', ') : '' }}</span>
                             @elseif ($promo->scope === 'category')
                                 <span class="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Kategori{{ $promo->target ? ' · '.$promo->target->name : '' }}</span>
                             @else
@@ -777,10 +870,14 @@ function posApp() {
         showConfirmModal: false,
         showEdcModal: false,
         edcFailed: false,
+        showBankModal: false,
+        bankAccounts: @json(config('hideout.bank_accounts')),
+        selectedBankIndex: 0,
         showPromoModal: false,
         printReceipt: false,
         discount: posState.discount || 0,
         amountPaid: posState.amountPaid || 0,
+        customerName: posState.customerName || '',
         promos: @json($promos),
 
         saveCart() {
@@ -788,7 +885,7 @@ function posApp() {
         },
 
         savePosState() {
-            localStorage.setItem('pos_state', JSON.stringify({ userId: {{ auth()->id() }}, discount: this.discount, amountPaid: this.amountPaid }));
+            localStorage.setItem('pos_state', JSON.stringify({ userId: {{ auth()->id() }}, discount: this.discount, amountPaid: this.amountPaid, customerName: this.customerName }));
         },
 
         init() {
@@ -849,7 +946,8 @@ function posApp() {
             if (cartItems.length === 0) return 0;
 
             if (promo.scope === 'item') {
-                let qualifying = cartItems.filter(i => i.menu_id === promo.target_id);
+                let targetMenuIds = (promo.menus || []).map(m => m.id);
+                let qualifying = cartItems.filter(i => targetMenuIds.some(id => id == i.menu_id));
                 if (qualifying.length === 0) return 0;
 
                 let totalQty = qualifying.reduce((s, i) => s + i.quantity, 0);
@@ -1013,6 +1111,10 @@ function posApp() {
                 this.showEdcModal = true;
                 return;
             }
+            if (this.paymentMethod === 'transfer') {
+                this.showBankModal = true;
+                return;
+            }
             if (this.paymentMethod === 'qris') {
                 this.qrisFailed = false;
                 this.showQrisModal = true;
@@ -1029,6 +1131,16 @@ function posApp() {
 
         edcFail() {
             this.edcFailed = true;
+        },
+
+        bankTransferPaid() {
+            this.showBankModal = false;
+            this.amountPaid = this.total;
+            this.$nextTick(() => {
+                let input = this.$refs.paymentInput;
+                if (input) input.value = this.total > 0 ? this.formatNumber(this.total) : '';
+            });
+            this.showConfirmModal = true;
         },
 
         submitTransaction(shouldPrint = false) {

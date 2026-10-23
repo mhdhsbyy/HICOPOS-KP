@@ -179,11 +179,7 @@
                                         Edit
                                     </a>
                                     <form action="{{ route('owner.cashiers.destroy', $cashier) }}" method="POST"
-                                        @if ($cashier->transactions_count > 0)
-                                            onsubmit="event.preventDefault(); blockedDelete('Kasir ini sudah memiliki data transaksi dan tidak dapat dihapus.');"
-                                        @else
-                                            onsubmit="event.preventDefault(); confirmDelete(this, 'Yakin ingin menghapus kasir ini?')"
-                                        @endif>
+                                        onsubmit="event.preventDefault(); confirmDelete(this, 'Yakin ingin menghapus kasir ini? Data transaksi yang sudah ada tidak akan terhapus.')">
                                         @csrf @method('DELETE')
                                         <button type="submit"
                                             class="inline-flex items-center gap-1.5 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition cursor-pointer" title="Hapus">

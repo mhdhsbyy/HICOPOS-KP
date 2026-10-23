@@ -51,6 +51,9 @@
         <p class="sub">{{ $receipt['code'] }}</p>
         <p class="sub">{{ $receipt['created_at'] }}</p>
         <p class="sub">Kasir: {{ $receipt['cashier'] }}</p>
+        @if (!empty($receipt['customer_name']))
+            <p class="sub">Pelanggan: {{ $receipt['customer_name'] }}</p>
+        @endif
     </div>
 
     <div class="divider"></div>

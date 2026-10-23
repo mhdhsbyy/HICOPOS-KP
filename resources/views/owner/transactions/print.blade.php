@@ -95,6 +95,7 @@
                     <th class="center" style="width:30px;">No</th>
                     <th>Kode Transaksi</th>
                     <th>Tanggal</th>
+                    <th>Pelanggan</th>
                     <th>Kasir / Owner</th>
                     <th class="center">Metode</th>
                     <th class="right">Total</th>
@@ -107,6 +108,7 @@
                         <td class="center">{{ $index + 1 }}</td>
                         <td class="bold">{{ $transaction->code }}</td>
                         <td>{{ $transaction->created_at->format('d M Y H:i') }}</td>
+                        <td class="bold">{{ $transaction->customer_name ?? '-' }}</td>
                         <td>
                             @if ($transaction->user)
                                 {{ trim($transaction->user->first_name.' '.$transaction->user->last_name) ?: $transaction->user->username }}

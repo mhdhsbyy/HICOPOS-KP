@@ -17,7 +17,7 @@ class MenuController extends Controller
             ? $request->query('status')
             : null;
 
-        $categories = Category::with(['menus' => function ($query) use ($status) {
+        $categories = Category::withTrashed()->with(['menus' => function ($query) use ($status) {
             $query->withCount('transactionItems')->orderBy('code');
 
             if ($status) {
@@ -82,12 +82,12 @@ class MenuController extends Controller
         ]);
 
         if ($request->hasFile('photo')) {
-            $category = Category::find($validated['category_id']);
+            $category = Category::withTrashed()->find($validated['category_id']);
             $categorySlug = str($category->name)->slug()->toString();
             $validated['photo'] = $request->file('photo')->store('menus/'.$categorySlug, 'public');
         }
 
-        $category = Category::find($validated['category_id']);
+        $category = Category::withTrashed()->find($validated['category_id']);
 
         $validated['status'] = 'active';
         $validated['code'] = Menu::generateCode($category);
@@ -101,6 +101,10 @@ class MenuController extends Controller
     public function edit(Menu $menu)
     {
         $categories = Category::orderBy('name')->get();
+
+        if ($menu->category?->trashed() && ! $categories->contains('id', $menu->category_id)) {
+            $categories->push($menu->category);
+        }
 
         return view('owner.menus.edit', compact('menu', 'categories'));
     }
@@ -148,7 +152,7 @@ class MenuController extends Controller
                     Storage::disk('public')->deleteDirectory($oldDir);
                 }
             }
-            $category = Category::find($validated['category_id']);
+            $category = Category::withTrashed()->find($validated['category_id']);
             $categorySlug = str($category->name)->slug()->toString();
             $validated['photo'] = $request->file('photo')->store('menus/'.$categorySlug, 'public');
         }
@@ -159,7 +163,7 @@ class MenuController extends Controller
         $menu->update($validated);
 
         if ($categoryChanged) {
-            $newCategory = Category::find($validated['category_id']);
+            $newCategory = Category::withTrashed()->find($validated['category_id']);
 
             $menu->update(['code' => Menu::generateCode($newCategory, $menu->id)]);
 
@@ -172,29 +176,16 @@ class MenuController extends Controller
 
     public function destroy(Menu $menu)
     {
-        if ($menu->transactionItems()->exists()) {
-            return back()->with('error', "Menu '{$menu->name}' tidak bisa dihapus karena sudah memiliki data transaksi.");
-        }
-
-        if ($menu->photo) {
-            $dir = dirname($menu->photo);
-            Storage::disk('public')->delete($menu->photo);
-            Storage::disk('public')->delete(GenerateMenuThumbnails::thumbPath($menu->photo));
-
-            $files = Storage::disk('public')->files($dir);
-            if (empty($files)) {
-                Storage::disk('public')->deleteDirectory($dir);
-            }
-        }
-
         $categoryId = $menu->category_id;
+        $menu->code = null;
+        $menu->saveQuietly();
 
         $menu->delete();
 
         Menu::reindexCodes($categoryId);
 
         return redirect()->route('owner.menus.index')
-            ->with('success', 'Menu berhasil dihapus.');
+            ->with('success', 'Menu berhasil dihapus. Data transaksi tetap tersimpan.');
     }
 
     public function toggleStatus(Request $request, Menu $menu)

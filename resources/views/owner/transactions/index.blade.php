@@ -242,7 +242,7 @@
                     <select id="filter-payment"
                         class="w-full px-4 py-2.5 rounded-xl border border-[#f0e8e0] bg-white text-sm text-[#2b1f17] focus:outline-none focus:ring-2 focus:ring-[#764706]/30 focus:border-[#764706] transition cursor-pointer">
                         <option value="">Semua Metode</option>
-                        @foreach (['cash' => 'Cash', 'debit' => 'Debit', 'kredit' => 'Kredit', 'qris' => 'QRIS'] as $method => $label)
+                        @foreach (['cash' => 'Cash', 'debit' => 'Debit', 'kredit' => 'Kredit', 'transfer' => 'Transfer', 'qris' => 'QRIS'] as $method => $label)
                             <option value="{{ $method }}" {{ request('payment_method') === $method ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>

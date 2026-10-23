@@ -21,7 +21,7 @@ class TransactionController extends Controller
             ->orderBy('category_id')
             ->paginate(8);
 
-        $promos = Promo::active()->get();
+        $promos = Promo::active()->with('menus')->get();
         $categories = Category::has('menus')->get();
 
         return view('cashier.transactions.create', compact('menus', 'promos', 'categories'));
@@ -72,10 +72,11 @@ class TransactionController extends Controller
             'items.*.discount' => 'nullable|numeric|min:0',
             'amount_paid' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
-            'payment_method' => 'required|in:cash,debit,kredit,qris',
+            'payment_method' => 'required|in:cash,debit,kredit,transfer,qris',
             'applied_promos' => 'nullable|array',
             'applied_promos.*.promo_id' => 'required_with:applied_promos|exists:promos,id',
             'applied_promos.*.discount_amount' => 'required_with:applied_promos|numeric|min:0',
+            'customer_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -108,7 +109,7 @@ class TransactionController extends Controller
 
             if ($request->applied_promos) {
                 $promoIds = collect($request->applied_promos)->pluck('promo_id');
-                $activePromos = Promo::active()->whereIn('id', $promoIds)->get();
+                $activePromos = Promo::active()->with('menus')->whereIn('id', $promoIds)->get();
 
                 foreach ($request->applied_promos as $applied) {
                     $promo = $activePromos->firstWhere('id', $applied['promo_id']);
@@ -138,6 +139,7 @@ class TransactionController extends Controller
 
             $transaction = Transaction::create([
                 'user_id' => Auth::id(),
+                'customer_name' => $request->customer_name,
                 'subtotal' => $subtotal,
                 'discount' => $manualDiscount,
                 'promo_discount' => $promoDiscount,
@@ -280,7 +282,8 @@ class TransactionController extends Controller
         $qualifyingItems = [];
 
         if ($promo->scope === 'item') {
-            $qualifyingItems = array_filter($itemsData, fn ($item) => $item['menu_id'] === $promo->target_id);
+            $targetMenuIds = $promo->menus->pluck('id')->all();
+            $qualifyingItems = array_filter($itemsData, fn ($item) => in_array((int) $item['menu_id'], $targetMenuIds, true));
         } elseif ($promo->scope === 'category') {
             $menuIds = Menu::where('category_id', $promo->target_id)->pluck('id')->toArray();
             $qualifyingItems = array_filter($itemsData, fn ($item) => in_array($item['menu_id'], $menuIds));

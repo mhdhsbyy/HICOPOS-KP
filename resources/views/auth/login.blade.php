@@ -84,7 +84,7 @@
                                 </svg>
 
                                 <input id="username" type="text" name="username" value="{{ old('username') }}"
-                                    required autofocus autocomplete="username" placeholder="Masukkan username"
+                                    autofocus autocomplete="username" placeholder="Masukkan username"
                                     class="w-full border-0 bg-transparent p-0 text-[#35271f] placeholder:text-[#a49689] focus:ring-0 text-[15px]">
                             </div>
                         </div>
@@ -103,36 +103,35 @@
                                         d="M16.5 10.5V7.5a4.5 4.5 0 0 0-9 0v3m-.75 0h10.5A1.5 1.5 0 0 1 18.75 12v7.5A1.5 1.5 0 0 1 17.25 21H6.75a1.5 1.5 0 0 1-1.5-1.5V12a1.5 1.5 0 0 1 1.5-1.5Z" />
                                 </svg>
 
-                                <input id="password" type="password" name="password" required
+                                <input id="password" type="password" name="password"
                                     autocomplete="current-password" placeholder="Masukkan password"
                                     class="w-full border-0 bg-transparent p-0 text-[#35271f] placeholder:text-[#a49689] focus:ring-0 text-[15px]">
                             </div>
 
-                            <x-input-error :messages="$errors->all()" class="mt-3" />
-                        </div>
+                            @php
+                                $loginErrors = $errors->all();
+                                if (in_array('Username wajib diisi.', $loginErrors) && in_array('Password wajib diisi.', $loginErrors)) {
+                                    $loginErrors = array_values(array_diff($loginErrors, ['Username wajib diisi.', 'Password wajib diisi.']));
+                                    array_unshift($loginErrors, 'Username dan password wajib diisi.');
+                                }
+                            @endphp
 
-                        {{-- Remember / Forgot --}}
-                        <div class="flex items-center justify-between pt-1">
-                            <label for="remember_me" class="inline-flex items-center gap-2.5 cursor-pointer">
-                                <input id="remember_me" type="checkbox" name="remember"
-                                    class="rounded-md border-[#d5c8bc] text-[#4c382a] shadow-sm focus:ring-[#7a5a3d]">
-                                <span class="text-[14px] text-[#6f6258] font-medium">
-                                    Ingat saya
-                                </span>
-                            </label>
-
-                            @if (Route::has('password.request'))
-                                <a href="{{ route('password.request') }}"
-                                    class="text-[14px] font-semibold text-[#8b684b] hover:text-[#3a2b22] transition">
-                                    Lupa password?
-                                </a>
+                            @if (! empty($loginErrors))
+                                <div class="mt-3 space-y-1">
+                                    @foreach ($loginErrors as $error)
+                                        <p class="text-xs text-red-500">{{ $error }}</p>
+                                    @endforeach
+                                </div>
                             @endif
                         </div>
 
+
+
+
                         {{-- Login --}}
                         <button type="submit"
-                            class="mt-2 w-full rounded-[16px] bg-gradient-to-r from-[#3c2d23] to-[#5a4332] px-6 py-3.5 text-white font-extrabold text-base shadow-[0_10px_24px_rgba(60,45,35,0.22)] hover:scale-[1.01] active:scale-[0.99] transition">
-                            Masuk
+                            class="mt-2 w-full rounded-[16px] bg-gradient-to-r from-[#3c2d23] to-[#5a4332] px-6 py-3.5 text-white font-extrabold text-base shadow-[0_10px_24px_rgba(60,45,35,0.22)] hover:from-[#5a4332] hover:to-[#7a5a3d] hover:shadow-[0_12px_28px_rgba(60,45,35,0.32)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300">
+                            Login
                         </button>
                     </form>
                 </div>

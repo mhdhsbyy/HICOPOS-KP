@@ -148,6 +148,7 @@
                         <th class="px-6 py-4 text-center w-12">No</th>
                         <th class="px-6 py-4">Kode Transaksi</th>
                         <th class="px-6 py-4">Tanggal</th>
+                        <th class="px-6 py-4">Pelanggan</th>
                         <th class="px-6 py-4">Kasir / Owner</th>
                         <th class="px-6 py-4 text-center">Metode</th>
                         <th class="px-6 py-4 text-center">Total</th>
@@ -161,6 +162,7 @@
                             <td class="px-6 py-4 text-center text-[#8b684b] w-12">{{ $loop->iteration }}</td>
                             <td class="px-6 py-4 font-bold text-[#2b1f17]">{{ $transaction->code }}</td>
                             <td class="px-6 py-4 text-[#5f4a3b]">{{ $transaction->created_at->format('d M Y H:i') }}</td>
+                            <td class="px-6 py-4 font-bold text-[#2b1f17]">{{ $transaction->customer_name ?? '-' }}</td>
                             <td class="px-6 py-4">
                                 @if ($transaction->user)
                                     <div>
@@ -200,7 +202,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
+                            <td colspan="9" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-[#d4c8b8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                                     <p class="mt-3 text-sm font-bold text-[#8b684b]">Belum ada transaksi</p>

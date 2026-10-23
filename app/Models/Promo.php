@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Promo extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -31,22 +32,18 @@ class Promo extends Model
         'is_active' => 'boolean',
     ];
 
-    public function menu()
-    {
-        return $this->belongsTo(Menu::class, 'target_id');
-    }
-
     public function category()
     {
-        return $this->belongsTo(Category::class, 'target_id');
+        return $this->belongsTo(Category::class, 'target_id')->withTrashed();
+    }
+
+    public function menus()
+    {
+        return $this->belongsToMany(Menu::class, 'promo_menus')->withTrashed();
     }
 
     public function target()
     {
-        if ($this->scope === 'item') {
-            return $this->menu();
-        }
-
         if ($this->scope === 'category') {
             return $this->category();
         }

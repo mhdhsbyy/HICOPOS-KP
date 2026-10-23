@@ -5,6 +5,7 @@
                 <th class="px-6 py-4 text-center text-xs font-bold text-[#8b684b] uppercase tracking-wider w-12">No</th>
                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Kode Transaksi</th>
                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Tanggal</th>
+                <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Pelanggan</th>
                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Kasir / Owner</th>
                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Metode</th>
                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Total</th>
@@ -18,6 +19,7 @@
                     <td class="px-6 py-4 text-center text-[#8b684b] w-12">{{ $transactions->firstItem() + $loop->index }}</td>
                     <td class="px-6 py-4 font-bold text-[#2b1f17]">{{ $transaction->code }}</td>
                     <td class="px-6 py-4 text-[#5f4a3b]">{{ $transaction->created_at->format('d M Y H:i') }}</td>
+                    <td class="px-6 py-4 font-bold text-[#2b1f17]">{{ $transaction->customer_name ?? '-' }}</td>
                     <td class="px-6 py-4">
                         @if ($transaction->user)
                             <div>

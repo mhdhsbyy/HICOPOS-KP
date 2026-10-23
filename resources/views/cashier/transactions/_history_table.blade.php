@@ -10,6 +10,7 @@
                 <th class="px-6 py-4 text-center text-xs font-bold text-[#8b684b] uppercase tracking-wider w-12">No</th>
                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Kode Transaksi</th>
                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Tanggal</th>
+                <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Pelanggan</th>
                 <th class="px-6 py-4 text-center text-xs font-bold text-[#8b684b] uppercase tracking-wider">Metode</th>
                 <th class="px-6 py-4 text-center text-xs font-bold text-[#8b684b] uppercase tracking-wider">Total</th>
                 <th class="px-6 py-4 text-center text-xs font-bold text-[#8b684b] uppercase tracking-wider">Status</th>
@@ -22,6 +23,7 @@
                     <td class="px-6 py-4 text-center text-[#8b684b] w-12">{{ $transactions->firstItem() + $loop->index }}</td>
                     <td class="px-6 py-4 text-left font-bold text-[#2b1f17]">{{ $transaction->code }}</td>
                     <td class="px-6 py-4 text-left text-[#5f4a3b]">{{ $transaction->created_at->format('d M Y H:i') }}</td>
+                    <td class="px-6 py-4 text-left font-bold text-[#2b1f17]">{{ $transaction->customer_name ?? '-' }}</td>
                     <td class="px-6 py-4 text-center">
                         <span class="text-[10px] font-bold text-[#5f4a3b] bg-[#f5f0eb] px-2.5 py-1 rounded-full uppercase">{{ $transaction->payment_method }}</span>
                     </td>

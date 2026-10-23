@@ -102,42 +102,8 @@
                         </div>
                         <x-input-error :messages="$errors->get('scope')" />
                     </div>
-                    <div x-show="scope === 'item'" x-data="menuSearch()" x-init="init()">
-                        <label class="block text-sm font-bold text-[#2b1f17] mb-1.5">Pilih Menu</label>
-                        <input type="hidden" name="target_id" :value="selectedId" :disabled="scope !== 'item'">
-                        <div class="relative">
-                            <div class="flex items-center w-full px-4 py-2.5 rounded-xl border border-[#e2d3c2] focus-within:ring-2 focus-within:ring-[#764706] focus-within:border-transparent transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#b8a898] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                                </svg>
-                                <input type="text" x-model="query" @input.debounce.200ms="filter()" @focus="open = true" @keydown.escape="open = false"
-                                    @keydown.arrow-down.prevent="$refs.list?.querySelector('[data-option]')?.focus()"
-                                    class="w-full border-0 bg-transparent p-0 ml-2 text-sm text-[#2b1f17] placeholder-[#b8a898] focus:ring-0"
-                                    :placeholder="selectedName || 'Ketik nama menu...'" autocomplete="off">
-                                <button x-show="selectedId" type="button" @click="clear()" class="ml-1 text-[#b8a898] hover:text-[#764706] transition shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <div x-show="open && filtered.length > 0" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
-                                x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1"
-                                @click.away="open = false" class="absolute z-50 mt-1 w-full bg-white border border-[#e2d3c2] rounded-xl shadow-lg max-h-60 overflow-y-auto">
-                                <template x-for="(menu, i) in filtered" :key="menu.id">
-                                    <div data-option tabindex="0"
-                                        @click="select(menu)" @keydown.enter="select(menu)"
-                                        class="px-4 py-2.5 cursor-pointer hover:bg-[#f5f0eb] transition flex items-center justify-between"
-                                        :class="selectedId === menu.id ? 'bg-[#f5f0eb]' : ''">
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-bold text-[#2b1f17] truncate" x-text="menu.name"></p>
-                                            <p class="text-xs text-[#8b684b]" x-text="menu.category"></p>
-                                        </div>
-                                        <span class="text-xs font-bold text-[#764706] shrink-0 ml-3" x-text="'Rp ' + formatRupiah(menu.price)"></span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                        <x-input-error :messages="$errors->get('target_id')" />
+                    <div x-show="scope === 'item'">
+                        @include('owner.promos._menu_multi_select', ['menus' => $menus, 'selectedIds' => old('menu_ids', [])])
                     </div>
                     <div x-show="scope === 'category'">
                         <label for="target_id_category" class="block text-sm font-bold text-[#2b1f17] mb-1.5">Pilih Kategori</label>
@@ -209,51 +175,6 @@ function promoForm() {
             let raw = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '');
             document.getElementById(hiddenId).value = raw;
             e.target.value = raw ? Number(raw).toLocaleString('id-ID') : '';
-        },
-    }
-}
-
-function menuSearch() {
-    let allMenus = {!! json_encode($menus->map(fn($m) => ['id' => $m->id, 'name' => $m->name, 'category' => $m->category->name ?? '', 'price' => $m->price])) !!};
-    return {
-        open: false,
-        query: '',
-        selectedId: '{{ old("target_id") }}',
-        selectedName: '',
-        filtered: allMenus,
-
-        init() {
-            if (this.selectedId) {
-                let m = allMenus.find(x => x.id == this.selectedId);
-                if (m) {
-                    this.selectedName = m.name + ' (' + m.category + ')';
-                    this.query = m.name;
-                }
-            }
-            this.filter();
-        },
-
-        filter() {
-            let q = this.query.toLowerCase();
-            this.filtered = q ? allMenus.filter(m => m.name.toLowerCase().includes(q) || m.category.toLowerCase().includes(q)) : allMenus;
-        },
-
-        select(menu) {
-            this.selectedId = menu.id;
-            this.selectedName = menu.name + ' (' + menu.category + ')';
-            this.query = menu.name;
-            this.open = false;
-        },
-
-        clear() {
-            this.selectedId = '';
-            this.selectedName = '';
-            this.query = '';
-            this.filtered = allMenus;
-        },
-
-        formatRupiah(n) {
-            return new Intl.NumberFormat('id-ID').format(n);
         },
     }
 }

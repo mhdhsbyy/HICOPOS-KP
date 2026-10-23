@@ -25,6 +25,7 @@ class TransactionSeeder extends Seeder
         Transaction::query()->delete();
 
         $paymentMethods = ['cash', 'cash', 'cash', 'debit', 'kredit', 'qris'];
+        $customerNames = [null, null, 'Budi Santoso', 'Siti Aminah', 'Andi', 'Dewi', 'Rudi', 'Ayu', 'Joko', 'Maya'];
 
         foreach ([$owner, $kasirHasby, $kasirZein] as $user) {
             for ($i = 0; $i < 5; $i++) {
@@ -91,6 +92,7 @@ class TransactionSeeder extends Seeder
 
                 $transaction = Transaction::create([
                     'user_id' => $user->id,
+                    'customer_name' => $customerNames[array_rand($customerNames)],
                     'subtotal' => $subtotal,
                     'discount' => $manualDiscount,
                     'promo_discount' => $promoDiscount,

@@ -16,6 +16,9 @@
                 <div>
                     <h2 class="text-xl font-black text-[#2b1f17]">Transaksi #{{ $transaction->id }}</h2>
                     <p class="text-sm text-[#5f4a3b] mt-1">{{ $transaction->created_at->format('d M Y, H:i') }}</p>
+                    @if ($transaction->customer_name)
+                        <p class="text-sm font-bold text-[#2b1f17] mt-0.5">Pelanggan: {{ $transaction->customer_name }}</p>
+                    @endif
                 </div>
             </div>
         </div>

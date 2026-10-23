@@ -58,27 +58,27 @@ class PromoSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        Promo::create([
+        $matchaPromo = Promo::create([
             'name' => 'Diskon Spesial Matcha',
             'description' => 'Diskon 20% untuk menu Matcha, minimal pembelian 2 item',
             'type' => 'percentage',
             'value' => 20,
             'scope' => 'item',
-            'target_id' => $matchaId,
             'min_quantity' => 2,
             'start_date' => now()->subDays(3),
             'end_date' => now()->addDays(14),
             'is_active' => true,
         ]);
+        $matchaPromo->menus()->attach($matchaId);
 
-        Promo::create([
+        $takoyakiPromo = Promo::create([
             'name' => 'Takoyaki Berlimpah',
             'description' => 'Potongan Rp 3.000 untuk setiap pembelian Takoyaki',
             'type' => 'flat',
             'value' => 3000,
             'scope' => 'item',
-            'target_id' => $takoyakiId,
             'is_active' => true,
         ]);
+        $takoyakiPromo->menus()->attach($takoyakiId);
     }
 }

@@ -237,6 +237,34 @@
                                 <span class="text-[#2b1f17]">Total</span>
                                 <span class="text-[#764706]" x-text="'Rp ' + formatNumber(total)"></span>
                             </div>
+
+                            {{-- Nama Pelanggan --}}
+                            <div class="space-y-1 pt-1">
+                                <input type="text" x-model="customerName" @input.debounce.500ms="savePosState()" maxlength="255" placeholder="Nama pelanggan (opsional)"
+                                    class="w-full px-3 py-1.5 rounded-lg border border-[#f0e8e0] text-sm text-[#2b1f17] placeholder-[#b0a090] focus:outline-none focus:ring-2 focus:ring-[#764706]/30 focus:border-[#764706] transition">
+                            </div>
+
+                            {{-- Metode Pembayaran --}}
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-[#8b684b] uppercase">Metode Pembayaran</label>
+                                <div class="grid grid-cols-5 gap-1">
+                                    <button type="button" @click="paymentMethod = 'cash'"
+                                        class="px-1 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer border"
+                                        :class="paymentMethod === 'cash' ? 'bg-[#764706] text-white border-[#764706]' : 'bg-white text-[#5f4a3b] border-[#f0e8e0] hover:border-[#764706]'">CASH</button>
+                                    <button type="button" @click="paymentMethod = 'debit'"
+                                        class="px-1 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer border"
+                                        :class="paymentMethod === 'debit' ? 'bg-[#764706] text-white border-[#764706]' : 'bg-white text-[#5f4a3b] border-[#f0e8e0] hover:border-[#764706]'">DEBIT</button>
+                                    <button type="button" @click="paymentMethod = 'kredit'"
+                                        class="px-1 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer border"
+                                        :class="paymentMethod === 'kredit' ? 'bg-[#764706] text-white border-[#764706]' : 'bg-white text-[#5f4a3b] border-[#f0e8e0] hover:border-[#764706]'">KREDIT</button>
+                                    <button type="button" @click="paymentMethod = 'transfer'; setPaymentFromTotal()"
+                                        class="px-1 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer border"
+                                        :class="paymentMethod === 'transfer' ? 'bg-[#764706] text-white border-[#764706]' : 'bg-white text-[#5f4a3b] border-[#f0e8e0] hover:border-[#764706]'">BANK</button>
+                                    <button type="button" @click="paymentMethod = 'qris'"
+                                        class="px-1 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer border"
+                                        :class="paymentMethod === 'qris' ? 'bg-[#764706] text-white border-[#764706]' : 'bg-white text-[#5f4a3b] border-[#f0e8e0] hover:border-[#764706]'">QRIS</button>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Bayar --}}
@@ -261,6 +289,11 @@
                             <span class="font-bold text-green-600" x-text="'Rp ' + formatNumber(change)"></span>
                         </div>
 
+                        {{-- Keterangan metode non-cash --}}
+                        <p class="text-[11px] text-[#8b684b]" x-show="paymentMethod === 'debit' || paymentMethod === 'kredit'">Pelanggan membayar melalui EDC, lalu tekan "Proses Pembayaran" untuk konfirmasi.</p>
+                        <p class="text-[11px] text-[#8b684b]" x-show="paymentMethod === 'qris'">Pelanggan membayar melalui QRIS, lalu tekan "Proses Pembayaran" untuk menampilkan kode QR dan konfirmasi pembayaran.</p>
+                        <p class="text-[11px] text-[#8b684b]" x-show="paymentMethod === 'transfer'">Transfer bank akan dikonfirmasi setelah menekan "Proses Pembayaran".</p>
+
                         {{-- Submit --}}
                         <form method="POST" action="{{ route('owner.transactions.store') }}" x-ref="form">
                             @csrf
@@ -268,14 +301,82 @@
                             <input type="hidden" name="amount_paid" :value="amountPaid">
                             <input type="hidden" name="discount" :value="discount">
                             <input type="hidden" name="applied_promos" :value="JSON.stringify(appliedPromos.map(p => ({promo_id: p.id, discount_amount: p.discount_amount})))">
+                            <input type="hidden" name="customer_name" :value="customerName.trim()">
+                            <input type="hidden" name="payment_method" :value="paymentMethod">
 
-                            <button type="submit" @click="submitTransaction"
-                                :disabled="cart.length === 0 || amountPaid < total"
+                            <button type="submit" @click.prevent="submitTransaction"
+                                :disabled="cart.length === 0 || (paymentMethod === 'cash' && amountPaid < total)"
                                 class="w-full py-2 rounded-xl text-sm font-bold transition shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                :class="cart.length > 0 && amountPaid >= total ? 'bg-[#764706] text-white hover:bg-[#5a3606]' : 'bg-gray-200 text-gray-500'">
+                                :class="cart.length > 0 && (paymentMethod !== 'cash' || amountPaid >= total) ? 'bg-[#764706] text-white hover:bg-[#5a3606]' : 'bg-gray-200 text-gray-500'">
                                 Proses Pembayaran
                             </button>
                         </form>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Transfer Bank Modal --}}
+            <div x-show="showBankModal" x-cloak
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showBankModal = false">
+                <div x-show="showBankModal"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    class="relative bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4 text-center space-y-5">
+
+                    <button type="button" @click="showBankModal = false"
+                        class="absolute top-3 right-3 w-7 h-7 rounded-lg text-[#8b684b] hover:bg-[#f0e8e0] hover:text-[#5f4a3b] flex items-center justify-center transition cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+
+                    <div class="w-14 h-14 mx-auto bg-[#FFF0DA] rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#764706]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-black text-[#2b1f17]">Transfer Bank</h3>
+                        <p class="text-sm text-[#8b684b] mt-1">Minta pelanggan transfer ke rekening di bawah ini.</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <template x-for="(account, index) in bankAccounts" :key="index">
+                            <button type="button" @click="selectedBankIndex = index"
+                                class="w-full px-4 py-3 rounded-xl border-2 text-left transition cursor-pointer"
+                                :class="selectedBankIndex === index ? 'border-[#764706] bg-[#FFF0DA]' : 'border-[#f0e8e0] bg-white hover:border-[#b8a898]'">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-sm font-black text-[#2b1f17]" x-text="account.bank"></span>
+                                    <span class="text-[10px] font-black tracking-wide text-[#764706]" x-show="selectedBankIndex === index">DIPILIH</span>
+                                </div>
+                                <p class="text-lg font-black tracking-widest text-[#764706] mt-1" x-text="account.account_number"></p>
+                                <p class="text-xs text-[#8b684b]" x-text="account.account_name"></p>
+                            </button>
+                        </template>
+                    </div>
+
+                    <div class="bg-[#faf7f4] rounded-xl p-4">
+                        <p class="text-sm text-[#5f4a3b]">Total yang harus dibayar</p>
+                        <p class="text-2xl font-black text-[#764706]" x-text="'Rp ' + formatNumber(total)"></p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button type="button" @click="bankTransferPaid()"
+                            class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-600 to-[#764706] text-white hover:from-green-700 hover:to-[#5a3606] transition shadow-md cursor-pointer flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                            Sudah Dibayar
+                        </button>
+                        <button type="button" @click="showBankModal = false"
+                            class="w-full py-2.5 rounded-xl text-sm font-bold text-[#764706] bg-[#764706]/10 border-2 border-[#764706]/30 hover:bg-[#764706]/20 transition shadow-sm cursor-pointer">
+                            Batal
+                        </button>
                     </div>
                 </div>
             </div>
@@ -329,7 +430,7 @@
                                 @endif
                                 <div class="flex items-center gap-2 flex-wrap mt-2">
                                     @if ($promo->scope === 'item')
-                                        <span class="text-[10px] font-bold text-[#764706] bg-[#FFF0DA] px-2 py-0.5 rounded-full">Item{{ $promo->target ? ' · '.$promo->target->name : '' }}</span>
+                                        <span class="text-[10px] font-bold text-[#764706] bg-[#FFF0DA] px-2 py-0.5 rounded-full">Item{{ $promo->menus->isNotEmpty() ? ' · '.$promo->menus->pluck('name')->join(', ') : '' }}</span>
                                     @elseif ($promo->scope === 'category')
                                         <span class="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Kategori{{ $promo->target ? ' · '.$promo->target->name : '' }}</span>
                                     @else
@@ -474,6 +575,7 @@
                                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider w-12">No</th>
                                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Kode Transaksi</th>
                                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Tanggal</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Pelanggan</th>
                                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Metode</th>
                                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Total</th>
                                 <th class="px-6 py-4 text-left text-xs font-bold text-[#8b684b] uppercase tracking-wider">Status</th>
@@ -486,6 +588,7 @@
                                     <td class="px-6 py-4 text-[#8b684b] w-12">{{ $transactions->firstItem() + $loop->index }}</td>
                                     <td class="px-6 py-4 font-bold text-[#2b1f17]">{{ $transaction->code }}</td>
                                     <td class="px-6 py-4 text-[#5f4a3b]">{{ $transaction->created_at->format('d M Y H:i') }}</td>
+                                    <td class="px-6 py-4 font-bold text-[#2b1f17]">{{ $transaction->customer_name ?? '-' }}</td>
                                     <td class="px-6 py-4">
                                         <span class="text-[10px] font-bold text-[#5f4a3b] bg-[#f5f0eb] px-2.5 py-1 rounded-full uppercase">{{ $transaction->payment_method }}</span>
                                     </td>
@@ -524,7 +627,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center">
+                                    <td colspan="8" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-[#d4c8b8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                                             <p class="mt-3 text-sm font-bold text-[#8b684b]">Belum ada riwayat transaksi</p>
@@ -613,6 +716,11 @@ function posApp() {
         selectedCategory: '',
         discount: posState.discount || 0,
         amountPaid: posState.amountPaid || 0,
+        customerName: posState.customerName || '',
+        paymentMethod: 'cash',
+        showBankModal: false,
+        bankAccounts: @json(config('hideout.bank_accounts')),
+        selectedBankIndex: 0,
         showPromoModal: false,
         noMenusFound: false,
         promos: @json($promos),
@@ -622,7 +730,7 @@ function posApp() {
         },
 
         savePosState() {
-            localStorage.setItem('pos_state', JSON.stringify({ userId: {{ auth()->id() }}, discount: this.discount, amountPaid: this.amountPaid }));
+            localStorage.setItem('pos_state', JSON.stringify({ userId: {{ auth()->id() }}, discount: this.discount, amountPaid: this.amountPaid, customerName: this.customerName }));
         },
 
         menuMatches(name, categoryId) {
@@ -695,14 +803,18 @@ function posApp() {
         },
 
         get change() {
-            return Math.max(0, this.amountPaid - this.total);
+            if (this.paymentMethod === 'cash') {
+                return Math.max(0, this.amountPaid - this.total);
+            }
+            return 0;
         },
 
         calculatePromoDiscount(promo, cartItems, cartSubtotal) {
             if (cartItems.length === 0) return 0;
 
             if (promo.scope === 'item') {
-                let qualifying = cartItems.filter(i => i.menu_id === promo.target_id);
+                let targetMenuIds = (promo.menus || []).map(m => m.id);
+                let qualifying = cartItems.filter(i => targetMenuIds.some(id => id == i.menu_id));
                 if (qualifying.length === 0) return 0;
 
                 let totalQty = qualifying.reduce((s, i) => s + i.quantity, 0);
@@ -826,7 +938,24 @@ function posApp() {
         },
 
         submitTransaction() {
-            if (this.cart.length === 0 || this.amountPaid < this.total) return;
+            if (this.cart.length === 0) return;
+            if (this.paymentMethod === 'transfer') {
+                this.showBankModal = true;
+                return;
+            }
+            if (this.amountPaid < this.total) return;
+            localStorage.removeItem('pos_cart');
+            localStorage.removeItem('pos_state');
+            this.$refs.form.submit();
+        },
+
+        bankTransferPaid() {
+            this.showBankModal = false;
+            this.amountPaid = this.total;
+            this.$nextTick(() => {
+                let input = this.$refs.paymentInput;
+                if (input) input.value = this.total > 0 ? this.formatNumber(this.total) : '';
+            });
             localStorage.removeItem('pos_cart');
             localStorage.removeItem('pos_state');
             this.$refs.form.submit();

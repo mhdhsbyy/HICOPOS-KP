@@ -15,16 +15,16 @@ class PromoController extends Controller
         $status = $request->query('status');
         $now = now();
 
-        $activeQuery = Promo::withCount('transactions')->with(['menu', 'category'])
+        $activeQuery = Promo::with(['menus', 'category'])
             ->where('is_active', true)
             ->where(function ($q) use ($now) {
                 $q->whereNull('end_date')->orWhere('end_date', '>=', $now);
             });
 
-        $expiredQuery = Promo::withCount('transactions')->with(['menu', 'category'])
+        $expiredQuery = Promo::with(['menus', 'category'])
             ->where('end_date', '<', $now);
 
-        $inactiveQuery = Promo::withCount('transactions')->with(['menu', 'category'])
+        $inactiveQuery = Promo::with(['menus', 'category'])
             ->where('is_active', false)
             ->where(function ($q) use ($now) {
                 $q->whereNull('end_date')->orWhere('end_date', '>=', $now);
@@ -58,7 +58,9 @@ class PromoController extends Controller
             'type' => ['required', 'in:percentage,flat'],
             'value' => ['required', 'numeric', 'min:0'],
             'scope' => ['required', 'in:item,category,transaction'],
-            'target_id' => ['required_if:scope,item', 'required_if:scope,category', 'nullable'],
+            'target_id' => ['required_if:scope,category', 'nullable'],
+            'menu_ids' => ['required_if:scope,item', 'array', 'min:1'],
+            'menu_ids.*' => ['integer', 'exists:menus,id'],
             'min_quantity' => ['nullable', 'integer', 'min:1'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
             'start_date' => ['nullable', 'date'],
@@ -72,7 +74,10 @@ class PromoController extends Controller
             'value.min' => 'Nilai diskon tidak boleh kurang dari 0.',
             'scope.required' => 'Target promo wajib dipilih.',
             'scope.in' => 'Target promo tidak valid.',
-            'target_id.required_if' => 'Target wajib dipilih untuk scope item atau kategori.',
+            'target_id.required_if' => 'Target wajib dipilih untuk scope kategori.',
+            'menu_ids.required_if' => 'Minimal satu menu wajib dipilih untuk scope item.',
+            'menu_ids.min' => 'Minimal satu menu wajib dipilih untuk scope item.',
+            'menu_ids.*.exists' => 'Menu yang dipilih tidak valid.',
             'start_date.date' => 'Format tanggal mulai tidak valid.',
             'end_date.date' => 'Format tanggal berakhir tidak valid.',
             'end_date.after_or_equal' => 'Tanggal berakhir harus setelah atau sama dengan tanggal mulai.',
@@ -84,10 +89,17 @@ class PromoController extends Controller
             }
         }
 
-        $validated['is_active'] = true;
-        $validated['target_id'] = $validated['scope'] === 'transaction' ? null : ($validated['target_id'] ?? null);
+        $menuIds = array_map('intval', $validated['menu_ids'] ?? []);
+        unset($validated['menu_ids']);
 
-        Promo::create($validated);
+        $validated['is_active'] = true;
+        $validated['target_id'] = $validated['scope'] === 'category' ? ($validated['target_id'] ?? null) : null;
+
+        $promo = Promo::create($validated);
+
+        if ($validated['scope'] === 'item') {
+            $promo->menus()->sync($menuIds);
+        }
 
         return redirect()->route('owner.promos.index')
             ->with('success', 'Promo berhasil ditambahkan.');
@@ -97,6 +109,18 @@ class PromoController extends Controller
     {
         $menus = Menu::orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
+
+        if ($promo->scope === 'category' && $promo->target?->trashed() && ! $categories->contains('id', $promo->target_id)) {
+            $categories->push($promo->target);
+        }
+
+        if ($promo->scope === 'item') {
+            foreach ($promo->menus as $menu) {
+                if (! $menus->contains('id', $menu->id)) {
+                    $menus->push($menu);
+                }
+            }
+        }
 
         return view('owner.promos.edit', compact('promo', 'menus', 'categories'));
     }
@@ -109,7 +133,9 @@ class PromoController extends Controller
             'type' => ['required', 'in:percentage,flat'],
             'value' => ['required', 'numeric', 'min:0'],
             'scope' => ['required', 'in:item,category,transaction'],
-            'target_id' => ['required_if:scope,item', 'required_if:scope,category', 'nullable'],
+            'target_id' => ['required_if:scope,category', 'nullable'],
+            'menu_ids' => ['required_if:scope,item', 'array', 'min:1'],
+            'menu_ids.*' => ['integer', 'exists:menus,id'],
             'min_quantity' => ['nullable', 'integer', 'min:1'],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
             'start_date' => ['nullable', 'date'],
@@ -123,7 +149,10 @@ class PromoController extends Controller
             'value.min' => 'Nilai diskon tidak boleh kurang dari 0.',
             'scope.required' => 'Target promo wajib dipilih.',
             'scope.in' => 'Target promo tidak valid.',
-            'target_id.required_if' => 'Target wajib dipilih untuk scope item atau kategori.',
+            'target_id.required_if' => 'Target wajib dipilih untuk scope kategori.',
+            'menu_ids.required_if' => 'Minimal satu menu wajib dipilih untuk scope item.',
+            'menu_ids.min' => 'Minimal satu menu wajib dipilih untuk scope item.',
+            'menu_ids.*.exists' => 'Menu yang dipilih tidak valid.',
             'start_date.date' => 'Format tanggal mulai tidak valid.',
             'end_date.date' => 'Format tanggal berakhir tidak valid.',
             'end_date.after_or_equal' => 'Tanggal berakhir harus setelah atau sama dengan tanggal mulai.',
@@ -135,10 +164,14 @@ class PromoController extends Controller
             }
         }
 
-        $validated['target_id'] = $validated['scope'] === 'transaction' ? null : ($validated['target_id'] ?? null);
+        $menuIds = array_map('intval', $validated['menu_ids'] ?? []);
+        unset($validated['menu_ids']);
+
+        $validated['target_id'] = $validated['scope'] === 'category' ? ($validated['target_id'] ?? null) : null;
         $validated['is_active'] = $request->boolean('is_active');
 
         $promo->update($validated);
+        $promo->menus()->sync($validated['scope'] === 'item' ? $menuIds : []);
 
         return redirect()->route('owner.promos.index')
             ->with('success', 'Promo berhasil diperbarui.');
@@ -146,14 +179,10 @@ class PromoController extends Controller
 
     public function destroy(Promo $promo)
     {
-        if ($promo->transactions()->exists()) {
-            return back()->with('error', "Promo '{$promo->name}' tidak bisa dihapus karena sudah memiliki data transaksi.");
-        }
-
         $promo->delete();
 
         return redirect()->route('owner.promos.index')
-            ->with('success', 'Promo berhasil dihapus.');
+            ->with('success', 'Promo berhasil dihapus. Data transaksi tetap tersimpan.');
     }
 
     public function toggleStatus(Request $request, Promo $promo)

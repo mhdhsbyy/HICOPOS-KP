@@ -5,11 +5,12 @@ namespace App\Models;
 use App\Console\Commands\GenerateMenuThumbnails;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
 class Menu extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = ['code', 'name', 'description', 'recipe', 'photo', 'price', 'category_id', 'status'];
 
@@ -31,7 +32,7 @@ class Menu extends Model
 
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class)->withTrashed();
     }
 
     public function getThumbUrlAttribute(): ?string
@@ -70,7 +71,7 @@ class Menu extends Model
     {
         $prefix = self::categoryPrefix($category);
 
-        $query = Menu::where('category_id', $category->id);
+        $query = Menu::where('category_id', $category->id)->whereNull('deleted_at');
         if ($exceptId) {
             $query->where('id', '!=', $exceptId);
         }
@@ -78,7 +79,7 @@ class Menu extends Model
 
         $code = $prefix.'-'.str_pad($count, 3, '0', STR_PAD_LEFT);
 
-        while (Menu::where('code', $code)->exists()) {
+        while (Menu::withTrashed()->where('code', $code)->exists()) {
             $count++;
             $code = $prefix.'-'.str_pad($count, 3, '0', STR_PAD_LEFT);
         }
@@ -88,14 +89,16 @@ class Menu extends Model
 
     public static function reindexCodes(int $categoryId, ?int $exceptId = null): void
     {
-        $prefix = self::categoryPrefix(Category::findOrFail($categoryId));
+        $prefix = self::categoryPrefix(Category::withTrashed()->findOrFail($categoryId));
 
-        $query = Menu::where('category_id', $categoryId);
+        $query = Menu::where('category_id', $categoryId)->whereNull('deleted_at');
         if ($exceptId) {
             $query->where('id', '!=', $exceptId);
         }
 
         $menus = $query->orderBy('code')->orderBy('id')->get();
+
+        Menu::where('category_id', $categoryId)->withTrashed()->whereNotNull('code')->update(['code' => null]);
 
         foreach ($menus as $menu) {
             $menu->code = null;

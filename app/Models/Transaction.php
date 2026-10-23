@@ -11,6 +11,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'user_id',
+        'customer_name',
         'subtotal',
         'discount',
         'promo_discount',
@@ -33,7 +34,7 @@ class Transaction extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function getCodeAttribute(): string
@@ -64,6 +65,7 @@ class Transaction extends Model
     public function promos()
     {
         return $this->belongsToMany(Promo::class, 'transaction_promos', 'transaction_id', 'promo_id')
-            ->withPivot('discount_amount');
+            ->withPivot('discount_amount')
+            ->withTrashed();
     }
 }

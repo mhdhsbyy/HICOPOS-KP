@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
@@ -120,14 +121,14 @@ class CashierController extends Controller
 
     public function destroy(User $cashier)
     {
-        if ($cashier->transactions()->exists()) {
-            return back()->with('error', "Kasir '{$cashier->username}' tidak bisa dihapus karena sudah memiliki data transaksi.");
+        if ($cashier->id === Auth::id()) {
+            return back()->with('error', 'Tidak bisa menghapus akun sendiri.');
         }
 
         $cashier->delete();
 
         return redirect()->route('owner.cashiers.index')
-            ->with('success', 'Kasir berhasil dihapus.');
+            ->with('success', 'Kasir berhasil dihapus. Data transaksi tetap tersimpan.');
     }
 
     public function toggleStatus(Request $request, User $cashier)

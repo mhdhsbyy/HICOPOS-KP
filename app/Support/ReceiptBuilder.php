@@ -18,6 +18,7 @@ class ReceiptBuilder
             'id' => $transaction->id,
             'created_at' => now()->format('d M Y H:i'),
             'cashier' => $transaction->user->username,
+            'customer_name' => $transaction->customer_name,
             'items' => $transaction->items->map(fn ($i) => [
                 'name' => $i->menu->name ?? 'Menu Dihapus',
                 'quantity' => $i->quantity,

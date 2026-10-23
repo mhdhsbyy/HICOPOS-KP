@@ -177,11 +177,7 @@
                                         Edit
                                     </a>
                                     <form action="{{ route('owner.categories.destroy', $category) }}" method="POST"
-                                        @if (($category->menus_count ?? $category->menus->count()) > 0)
-                                            onsubmit="event.preventDefault(); blockedDelete('Kategori ini masih memiliki menu dan tidak dapat dihapus.');"
-                                        @else
-                                            onsubmit="event.preventDefault(); confirmDelete(this, 'Yakin ingin menghapus kategori ini?')"
-                                        @endif>
+                                        onsubmit="event.preventDefault(); confirmDelete(this, 'Yakin ingin menghapus kategori ini? Menu di dalamnya tidak akan terhapus.')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
