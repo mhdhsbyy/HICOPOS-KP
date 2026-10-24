@@ -24,7 +24,7 @@
             <template x-for="(menu, i) in filtered" :key="menu.id">
                 <label class="px-4 py-2.5 cursor-pointer hover:bg-[#f5f0eb] transition flex items-center gap-3"
                     :class="isSelected(menu) ? 'bg-[#f5f0eb]' : ''">
-                    <input type="checkbox" name="menu_ids[]" :value="String(menu.id)" x-model="selectedIds"
+                    <input type="checkbox" :checked="isSelected(menu)" @change="toggle(menu)"
                         :disabled="scope !== 'item'"
                         class="w-4 h-4 rounded border-[#e2d3c2] text-[#764706] focus:ring-[#764706] shrink-0">
                     <div class="min-w-0 flex-1">
@@ -37,6 +37,10 @@
             <p x-show="filtered.length === 0" class="px-4 py-3 text-sm text-[#b8a898] text-center">Menu tidak ditemukan.</p>
         </div>
     </div>
+
+    <template x-for="id in selectedIds" :key="id">
+        <input type="hidden" name="menu_ids[]" :value="id">
+    </template>
 
     <div x-show="selectedIds.length > 0" class="flex items-center flex-wrap gap-1.5 mt-2">
         <template x-for="menu in selectedMenus" :key="menu.id">

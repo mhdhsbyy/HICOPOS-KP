@@ -240,8 +240,21 @@
 
                             {{-- Nama Pelanggan --}}
                             <div class="space-y-1 pt-1">
-                                <input type="text" x-model="customerName" @input.debounce.500ms="savePosState()" maxlength="255" placeholder="Nama pelanggan (opsional)"
-                                    class="w-full px-3 py-1.5 rounded-lg border border-[#f0e8e0] text-sm text-[#2b1f17] placeholder-[#b0a090] focus:outline-none focus:ring-2 focus:ring-[#764706]/30 focus:border-[#764706] transition">
+                                <label class="text-[10px] font-bold text-[#8b684b] uppercase">Nama Pelanggan <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <input type="text" x-model="customerName" x-ref="customerInput"
+                                        @input.debounce.500ms="savePosState(); customerNameError = false"
+                                        maxlength="255" placeholder="Nama pelanggan"
+                                        :class="customerNameError ? 'border-red-400 focus:ring-red-300 focus:border-red-400' : 'border-[#f0e8e0] focus:ring-[#764706]/30 focus:border-[#764706]'"
+                                        class="w-full pl-3 pr-8 py-1.5 rounded-lg border text-sm text-[#2b1f17] placeholder-[#b0a090] focus:outline-none focus:ring-2 transition">
+                                    <button type="button" x-show="customerName.length > 0" x-cloak
+                                        @click="customerName = ''; customerNameError = false; savePosState(); $refs.customerInput.focus()"
+                                        class="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md text-[#b0a090] hover:text-[#764706] hover:bg-[#f5f0eb] flex items-center justify-center transition cursor-pointer"
+                                        title="Hapus nama pelanggan" aria-label="Hapus nama pelanggan">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-red-500" x-show="customerNameError" x-cloak>Nama pelanggan wajib diisi.</p>
                             </div>
 
                             {{-- Metode Pembayaran --}}
@@ -371,10 +384,11 @@
                         <button type="button" @click="bankTransferPaid()"
                             class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-600 to-[#764706] text-white hover:from-green-700 hover:to-[#5a3606] transition shadow-md cursor-pointer flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                            Sudah Dibayar
+                            Pembayaran Berhasil
                         </button>
                         <button type="button" @click="showBankModal = false"
-                            class="w-full py-2.5 rounded-xl text-sm font-bold text-[#764706] bg-[#764706]/10 border-2 border-[#764706]/30 hover:bg-[#764706]/20 transition shadow-sm cursor-pointer">
+                            class="w-full py-2.5 rounded-xl text-sm font-bold text-[#764706] bg-[#764706]/10 border-2 border-[#764706]/30 hover:bg-[#764706]/20 transition shadow-sm cursor-pointer flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                             Batal
                         </button>
                     </div>
@@ -717,6 +731,7 @@ function posApp() {
         discount: posState.discount || 0,
         amountPaid: posState.amountPaid || 0,
         customerName: posState.customerName || '',
+        customerNameError: false,
         paymentMethod: 'cash',
         showBankModal: false,
         bankAccounts: @json(config('hideout.bank_accounts')),
@@ -937,8 +952,22 @@ function posApp() {
             this.savePosState();
         },
 
+        validateCustomerName() {
+            if (!this.customerName.trim()) {
+                this.customerNameError = true;
+                this.$nextTick(() => {
+                    let input = this.$refs.customerInput;
+                    if (input) input.focus();
+                });
+                return false;
+            }
+            this.customerNameError = false;
+            return true;
+        },
+
         submitTransaction() {
             if (this.cart.length === 0) return;
+            if (!this.validateCustomerName()) return;
             if (this.paymentMethod === 'transfer') {
                 this.showBankModal = true;
                 return;
@@ -951,6 +980,7 @@ function posApp() {
 
         bankTransferPaid() {
             this.showBankModal = false;
+            if (!this.validateCustomerName()) return;
             this.amountPaid = this.total;
             this.$nextTick(() => {
                 let input = this.$refs.paymentInput;

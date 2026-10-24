@@ -244,9 +244,21 @@
 
                     {{-- Nama Pelanggan --}}
                     <div class="space-y-2 pt-1">
-                        <label class="text-xs font-bold text-[#5f4a3b]">Nama Pelanggan <span class="text-[#b0a090] font-normal">(opsional)</span></label>
-                        <input type="text" x-model="customerName" @input.debounce.500ms="savePosState()" maxlength="255" placeholder="Contoh: Budi"
-                            class="w-full px-3 py-2 rounded-xl border border-[#f0e8e0] text-sm text-[#2b1f17] placeholder-[#b0a090] focus:outline-none focus:ring-2 focus:ring-[#764706]/30 focus:border-[#764706] transition">
+                        <label class="text-xs font-bold text-[#5f4a3b]">Nama Pelanggan <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <input type="text" x-model="customerName" x-ref="customerInput"
+                                @input.debounce.500ms="savePosState(); customerNameError = false"
+                                maxlength="255" placeholder="Contoh: Budi"
+                                :class="customerNameError ? 'border-red-400 focus:ring-red-300 focus:border-red-400' : 'border-[#f0e8e0] focus:ring-[#764706]/30 focus:border-[#764706]'"
+                                class="w-full pl-3 pr-9 py-2 rounded-xl border text-sm text-[#2b1f17] placeholder-[#b0a090] focus:outline-none focus:ring-2 transition">
+                            <button type="button" x-show="customerName.length > 0" x-cloak
+                                @click="customerName = ''; customerNameError = false; savePosState(); $refs.customerInput.focus()"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg text-[#b0a090] hover:text-[#764706] hover:bg-[#f5f0eb] flex items-center justify-center transition cursor-pointer"
+                                title="Hapus nama pelanggan" aria-label="Hapus nama pelanggan">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <p class="text-xs text-red-500" x-show="customerNameError" x-cloak>Nama pelanggan wajib diisi.</p>
                     </div>
                 </div>
 
@@ -420,10 +432,11 @@
                 <button type="button" @click="bankTransferPaid()"
                     class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-600 to-[#764706] text-white hover:from-green-700 hover:to-[#5a3606] transition shadow-md cursor-pointer flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                    Sudah Dibayar
+                    Pembayaran Berhasil
                 </button>
                 <button type="button" @click="showBankModal = false"
-                    class="w-full py-2.5 rounded-xl text-sm font-bold text-[#764706] bg-[#764706]/10 border-2 border-[#764706]/30 hover:bg-[#764706]/20 transition shadow-sm cursor-pointer">
+                    class="w-full py-2.5 rounded-xl text-sm font-bold text-[#764706] bg-[#764706]/10 border-2 border-[#764706]/30 hover:bg-[#764706]/20 transition shadow-sm cursor-pointer flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                     Batal
                 </button>
             </div>
@@ -448,56 +461,31 @@
             x-transition:leave-end="opacity-0 scale-95"
             class="relative bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4 text-center space-y-5">
 
-            <button type="button" @click="showQrisModal = false"
-                class="absolute top-3 right-3 w-7 h-7 rounded-lg text-[#8b684b] hover:bg-[#f0e8e0] hover:text-[#5f4a3b] flex items-center justify-center transition cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-            </button>
+            <div class="space-y-5">
+                <h3 class="text-lg font-black text-[#2b1f17]">Scan QRIS</h3>
 
-            <template x-if="!qrisFailed">
-                <div class="space-y-5">
-                    <h3 class="text-lg font-black text-[#2b1f17]">Scan QRIS</h3>
-
-                    <div class="w-52 h-52 mx-auto bg-[#f0e8e0] rounded-xl flex items-center justify-center border-2 border-dashed border-[#d4c8b8] overflow-hidden">
-                        <img src="{{ asset('images/qris.jpeg') }}" alt="QRIS" class="w-full h-full object-contain">
-                    </div>
-
-                    <div>
-                        <p class="text-sm text-[#8b684b]">Total Pembayaran</p>
-                        <p class="text-2xl font-black text-[#764706]" x-text="'Rp ' + formatNumber(total)"></p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <button type="button" @click="qrisPaid()"
-                            class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-600 to-[#764706] text-white hover:from-green-700 hover:to-[#5a3606] transition shadow-md cursor-pointer flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                            Pembayaran Berhasil
-                        </button>
-                        <button type="button" @click="qrisFail()"
-                            class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-red-50 via-red-50 to-[#764706]/15 text-red-600 border-2 border-[#764706]/40 hover:from-red-100 transition cursor-pointer flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-                            Pembayaran Gagal
-                        </button>
-                    </div>
+                <div class="w-60 max-w-full mx-auto bg-white rounded-xl border-2 border-[#d4c8b8] shadow-sm p-2 overflow-hidden">
+                    <img src="{{ asset('images/qris.jpeg') }}" alt="QRIS" class="block w-full h-auto rounded-lg">
                 </div>
-            </template>
 
-            <template x-if="qrisFailed">
-                <div class="space-y-5">
-                    <div class="w-14 h-14 mx-auto bg-red-50 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-black text-red-600">Pembayaran Gagal</h3>
-                        <p class="text-sm text-[#8b684b] mt-1">Pelanggan belum menyelesaikan pembayaran. Silakan coba lagi.</p>
-                    </div>
-                    <div class="space-y-2">
-                        <button type="button" @click="qrisFailed = false"
-                            class="w-full py-2.5 rounded-xl text-sm font-bold bg-[#FFF0DA] text-[#764706] border-2 border-[#764706]/30 hover:bg-[#f0e0c0] transition cursor-pointer">
-                            Coba Lagi
-                        </button>
-                    </div>
+                <div>
+                    <p class="text-sm text-[#8b684b]">Total Pembayaran</p>
+                    <p class="text-2xl font-black text-[#764706]" x-text="'Rp ' + formatNumber(total)"></p>
                 </div>
-            </template>
+
+                <div class="space-y-2">
+                    <button type="button" @click="qrisPaid()"
+                        class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-600 to-[#764706] text-white hover:from-green-700 hover:to-[#5a3606] transition shadow-md cursor-pointer flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                        Pembayaran Berhasil
+                    </button>
+                    <button type="button" @click="showQrisModal = false"
+                        class="w-full py-3 rounded-xl text-sm font-bold bg-[#FFF0DA] text-[#764706] border-2 border-[#764706]/30 hover:bg-[#f0e0c0] transition cursor-pointer flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                        Batal
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -519,58 +507,33 @@
             x-transition:leave-end="opacity-0 scale-95"
             class="relative bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4 text-center space-y-5">
 
-            <button type="button" @click="showEdcModal = false"
-                class="absolute top-3 right-3 w-7 h-7 rounded-lg text-[#8b684b] hover:bg-[#f0e8e0] hover:text-[#5f4a3b] flex items-center justify-center transition cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-            </button>
-
-            <template x-if="!edcFailed">
-                <div class="space-y-5">
-                    <div class="w-14 h-14 mx-auto bg-blue-50 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-black text-[#2b1f17]">Pembayaran Debit/Kredit</h3>
-                        <p class="text-sm text-[#8b684b] mt-1">Pelanggan telah membayar melalui EDC.</p>
-                    </div>
-
-                    <div>
-                        <p class="text-sm text-[#5f4a3b]">Total Pembayaran</p>
-                        <p class="text-2xl font-black text-[#764706]" x-text="'Rp ' + formatNumber(total)"></p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <button type="button" @click="edcPaid()"
-                            class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-600 to-[#764706] text-white hover:from-green-700 hover:to-[#5a3606] transition shadow-md cursor-pointer flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                            Pembayaran Berhasil
-                        </button>
-                        <button type="button" @click="edcFail()"
-                            class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-red-50 via-red-50 to-[#764706]/15 text-red-600 border-2 border-[#764706]/40 hover:from-red-100 transition cursor-pointer flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-                            Pembayaran Gagal
-                        </button>
-                    </div>
+            <div class="space-y-5">
+                <div class="w-14 h-14 mx-auto bg-blue-50 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>
                 </div>
-            </template>
-
-            <template x-if="edcFailed">
-                <div class="space-y-5">
-                    <div class="w-14 h-14 mx-auto bg-red-50 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-black text-red-600">Pembayaran Gagal</h3>
-                        <p class="text-sm text-[#8b684b] mt-1">Silakan pilih metode pembayaran kembali.</p>
-                    </div>
-                    <div class="space-y-2">
-                        <button type="button" @click="edcFailed = false"
-                            class="w-full py-2.5 rounded-xl text-sm font-bold bg-[#FFF0DA] text-[#764706] border-2 border-[#764706]/30 hover:bg-[#f0e0c0] transition cursor-pointer">
-                            Coba Lagi
-                        </button>
-                    </div>
+                <div>
+                    <h3 class="text-lg font-black text-[#2b1f17]">Pembayaran Debit/Kredit</h3>
+                    <p class="text-sm text-[#8b684b] mt-1">Pelanggan telah membayar melalui EDC.</p>
                 </div>
-            </template>
+
+                <div>
+                    <p class="text-sm text-[#5f4a3b]">Total Pembayaran</p>
+                    <p class="text-2xl font-black text-[#764706]" x-text="'Rp ' + formatNumber(total)"></p>
+                </div>
+
+                <div class="space-y-2">
+                    <button type="button" @click="edcPaid()"
+                        class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-green-600 to-[#764706] text-white hover:from-green-700 hover:to-[#5a3606] transition shadow-md cursor-pointer flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                        Pembayaran Berhasil
+                    </button>
+                    <button type="button" @click="showEdcModal = false"
+                        class="w-full py-3 rounded-xl text-sm font-bold bg-[#FFF0DA] text-[#764706] border-2 border-[#764706]/30 hover:bg-[#f0e0c0] transition cursor-pointer flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                        Batal
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -866,10 +829,8 @@ function posApp() {
         selectedCategory: '',
         paymentMethod: 'cash',
         showQrisModal: false,
-        qrisFailed: false,
         showConfirmModal: false,
         showEdcModal: false,
-        edcFailed: false,
         showBankModal: false,
         bankAccounts: @json(config('hideout.bank_accounts')),
         selectedBankIndex: 0,
@@ -878,6 +839,7 @@ function posApp() {
         discount: posState.discount || 0,
         amountPaid: posState.amountPaid || 0,
         customerName: posState.customerName || '',
+        customerNameError: false,
         promos: @json($promos),
 
         saveCart() {
@@ -1097,17 +1059,25 @@ function posApp() {
         qrisPaid() {
             this.paymentMethod = 'qris';
             this.showQrisModal = false;
-            this.qrisFailed = false;
             this.showConfirmModal = true;
         },
 
-        qrisFail() {
-            this.qrisFailed = true;
+        validateCustomerName() {
+            if (!this.customerName.trim()) {
+                this.customerNameError = true;
+                this.$nextTick(() => {
+                    let input = this.$refs.customerInput;
+                    if (input) input.focus();
+                });
+                return false;
+            }
+            this.customerNameError = false;
+            return true;
         },
 
         proceedPayment() {
+            if (!this.validateCustomerName()) return;
             if (this.paymentMethod === 'debit' || this.paymentMethod === 'kredit') {
-                this.edcFailed = false;
                 this.showEdcModal = true;
                 return;
             }
@@ -1116,7 +1086,6 @@ function posApp() {
                 return;
             }
             if (this.paymentMethod === 'qris') {
-                this.qrisFailed = false;
                 this.showQrisModal = true;
                 return;
             }
@@ -1125,12 +1094,7 @@ function posApp() {
 
         edcPaid() {
             this.showEdcModal = false;
-            this.edcFailed = false;
             this.showConfirmModal = true;
-        },
-
-        edcFail() {
-            this.edcFailed = true;
         },
 
         bankTransferPaid() {
@@ -1145,6 +1109,7 @@ function posApp() {
 
         submitTransaction(shouldPrint = false) {
             if (this.cart.length === 0) return;
+            if (!this.validateCustomerName()) return;
             if (this.paymentMethod === 'cash' && this.amountPaid < this.total) return;
             this.printReceipt = shouldPrint;
             this.showConfirmModal = false;

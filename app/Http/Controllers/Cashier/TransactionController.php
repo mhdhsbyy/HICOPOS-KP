@@ -76,8 +76,10 @@ class TransactionController extends Controller
             'applied_promos' => 'nullable|array',
             'applied_promos.*.promo_id' => 'required_with:applied_promos|exists:promos,id',
             'applied_promos.*.discount_amount' => 'required_with:applied_promos|numeric|min:0',
-            'customer_name' => 'nullable|string|max:255',
+            'customer_name' => 'required|string|max:255',
             'notes' => 'nullable|string|max:500',
+        ], [
+            'customer_name.required' => 'Nama pelanggan wajib diisi.',
         ]);
 
         DB::beginTransaction();
